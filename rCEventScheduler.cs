@@ -20,6 +20,7 @@ namespace Oxide.Plugins
         private DateTime _nextEventTime = DateTime.MinValue;
         private EventEntry _nextEvent;
         private readonly System.Random _rng = new System.Random();
+        private DateTime _lastEventsCommand = DateTime.MinValue;
 
         private readonly Dictionary<string, string> _headers = new Dictionary<string, string>
         {
@@ -87,7 +88,7 @@ namespace Oxide.Plugins
             {
                 Events = new List<EventEntry>
                 {
-                    new EventEntry { Name = "AIR EVENT",                      Enabled = true, RequiredPlugin = "AirEvent",         RunTime = 60,  StartCommand = "airstart",                    StopCommand = "" },
+                    new EventEntry { Name = "Air Event",                      Enabled = true, RequiredPlugin = "AirEvent",         RunTime = 60,  StartCommand = "airstart",                    StopCommand = "" },
                     new EventEntry { Name = "Airfield Event",                 Enabled = true, RequiredPlugin = "AirfieldEvent",    RunTime = 60,  StartCommand = "afestart",                    StopCommand = "" },
                     new EventEntry { Name = "Arctic Base Event",              Enabled = true, RequiredPlugin = "ArcticBaseEvent",  RunTime = 60,  StartCommand = "abstart",                     StopCommand = "" },
                     new EventEntry { Name = "Armored Train",                  Enabled = true, RequiredPlugin = "ArmoredTrain",     RunTime = 60,  StartCommand = "atrainstart",                 StopCommand = "" },
@@ -103,11 +104,13 @@ namespace Oxide.Plugins
                     new EventEntry { Name = "Boss Monster Oni",               Enabled = true, RequiredPlugin = "BossMonster",      RunTime = 60,  StartCommand = "SpawnBoss Oni",               StopCommand = "KillBoss Oni" },
                     new EventEntry { Name = "Boss Monster Raptor",            Enabled = true, RequiredPlugin = "BossMonster",      RunTime = 60,  StartCommand = "SpawnBoss Raptor",            StopCommand = "KillBoss Raptor" },
                     new EventEntry { Name = "Boss Monster Scary",             Enabled = true, RequiredPlugin = "BossMonster",      RunTime = 60,  StartCommand = "SpawnBoss Scary",             StopCommand = "KillBoss Scary" },
+                    new EventEntry { Name = "Celestial Barrage",              Enabled = true, RequiredPlugin = "CelestialBarrage", RunTime = 5,   StartCommand = "cb.random",                   StopCommand = "" },
                     new EventEntry { Name = "Convoy",                         Enabled = true, RequiredPlugin = "Convoy",           RunTime = 60,  StartCommand = "convoystart",                 StopCommand = "" },
                     new EventEntry { Name = "Gas Station Event",              Enabled = true, RequiredPlugin = "GasStationEvent",  RunTime = 60,  StartCommand = "gsstart",                     StopCommand = "" },
                     new EventEntry { Name = "Gun Game",                       Enabled = true, RequiredPlugin = "GunGame",          RunTime = 45,  StartCommand = "ggstart",                     StopCommand = "" },
                     new EventEntry { Name = "Harbor Event",                   Enabled = true, RequiredPlugin = "HarborEvent",      RunTime = 60,  StartCommand = "harborstart",                 StopCommand = "" },
                     new EventEntry { Name = "Supermarket Event",              Enabled = true, RequiredPlugin = "SupermarketEvent", RunTime = 60,  StartCommand = "supermarketstart",            StopCommand = "" },
+                    new EventEntry { Name = "Twister",                        Enabled = true, RequiredPlugin = "Tornado",           RunTime = 5,   StartCommand = "tornado start random",        StopCommand = "" },
                     new EventEntry { Name = "Water Event",                    Enabled = true, RequiredPlugin = "WaterEvent",       RunTime = 120, StartCommand = "waterstart",                  StopCommand = "" },
                 }
             };
@@ -168,10 +171,7 @@ namespace Oxide.Plugins
 
             // Plugin Loaded message — valid events only
             string names     = string.Join(", ", valid.Select(e => e.Name));
-            string eventList = string.Join("\n", valid.Select(e =>
-                $"• **{e.Name}** — {e.RunTime} min" +
-                (string.IsNullOrEmpty(e.StopCommand) ? "" : "  *(has stop command)*")
-            ));
+            string eventList = string.Join("\n", valid.Select(e => $"• {e.Name}"));
 
             LogEvent(
                 consoleMsg: $"[rCEventScheduler] {valid.Count} event(s) loaded: {names}",
@@ -222,6 +222,9 @@ namespace Oxide.Plugins
             if (string.IsNullOrEmpty(message)) return;
             if (message.Trim().ToLower() != "!events") return;
 
+            if ((DateTime.Now - _lastEventsCommand).TotalMinutes < 5) return;
+
+            _lastEventsCommand = DateTime.Now;
             ShowEventStatus(player);
         }
 
@@ -502,8 +505,8 @@ namespace Oxide.Plugins
             [JsonProperty("color")]
             public int Color { get; set; }
 
-            [JsonProperty("fields")]
-            public List<DiscordEmbedField> Fields { get; set; } = new List<DiscordEmbedField>();
+            [JsonProperty("fields", NullValueHandling = NullValueHandling.Ignore)]
+            public List<DiscordEmbedField> Fields { get; set; }
 
             [JsonProperty("footer")]
             public DiscordEmbedFooter Footer { get; set; }
@@ -519,6 +522,7 @@ namespace Oxide.Plugins
 
             public DiscordEmbed AddField(string name, string value, bool inline = false)
             {
+                if (Fields == null) Fields = new List<DiscordEmbedField>();
                 Fields.Add(new DiscordEmbedField { Name = name, Value = value, Inline = inline });
                 return this;
             }

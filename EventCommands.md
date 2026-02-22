@@ -10,7 +10,7 @@ To add new events, edit `oxide/config/rCEventScheduler.json` and reload the plug
 
 | # | Event Name | Required Plugin | Run Time | Start Command | Stop Command | Notes |
 |---|---|---|---|---|---|---|
-| 1 | AIR EVENT | `AirEvent` | 60 min | `airstart` | *(none)* | Self-managed |
+| 1 | Air Event | `AirEvent` | 60 min | `airstart` | *(none)* | Self-managed |
 | 2 | Airfield Event | `AirfieldEvent` | 60 min | `afestart` | *(none)* | Self-managed |
 | 3 | Arctic Base Event | `ArcticBaseEvent` | 60 min | `abstart` | *(none)* | Self-managed |
 | 4 | Armored Train | `ArmoredTrain` | 60 min | `atrainstart` | *(none)* | Self-managed |
@@ -26,12 +26,14 @@ To add new events, edit `oxide/config/rCEventScheduler.json` and reload the plug
 | 14 | Boss Monster Oni | `BossMonster` | 60 min | `SpawnBoss Oni` | `KillBoss Oni` | Requires stop command |
 | 15 | Boss Monster Raptor | `BossMonster` | 60 min | `SpawnBoss Raptor` | `KillBoss Raptor` | Requires stop command |
 | 16 | Boss Monster Scary | `BossMonster` | 60 min | `SpawnBoss Scary` | `KillBoss Scary` | Requires stop command |
-| 17 | Convoy | `Convoy` | 60 min | `convoystart` | *(none)* | Self-managed |
-| 18 | Gas Station Event | `GasStationEvent` | 60 min | `gsstart` | *(none)* | Self-managed |
-| 19 | Gun Game | `GunGame` | 45 min | `ggstart` | *(none)* | Self-managed |
-| 20 | Harbor Event | `HarborEvent` | 60 min | `harborstart` | *(none)* | Self-managed |
-| 21 | Supermarket Event | `SupermarketEvent` | 60 min | `supermarketstart` | *(none)* | Self-managed |
-| 22 | Water Event | `WaterEvent` | 120 min | `waterstart` | *(none)* | Self-managed — longer run time |
+| 17 | Celestial Barrage | `CelestialBarrage` | 5 min | `cb.random` | *(none)* | Self-managed |
+| 18 | Convoy | `Convoy` | 60 min | `convoystart` | *(none)* | Self-managed |
+| 19 | Gas Station Event | `GasStationEvent` | 60 min | `gsstart` | *(none)* | Self-managed |
+| 20 | Gun Game | `GunGame` | 45 min | `ggstart` | *(none)* | Self-managed |
+| 21 | Harbor Event | `HarborEvent` | 60 min | `harborstart` | *(none)* | Self-managed |
+| 22 | Supermarket Event | `SupermarketEvent` | 60 min | `supermarketstart` | *(none)* | Self-managed |
+| 23 | Twister | `Tornado` | 5 min | `tornado start random` | *(none)* | Self-managed |
+| 24 | Water Event | `WaterEvent` | 120 min | `waterstart` | *(none)* | Self-managed — longer run time |
 
 ---
 

@@ -48,25 +48,196 @@
   "Enable Player Events Command": true,
   "Events": [
     {
-      "Event Name": "Convoy",
+      "Event Name": "Air Event",
       "Event Enabled": true,
+      "Required Plugin": "AirEvent",
       "Event Run Time (minutes)": 60,
-      "Event Start Command": "convoystart",
+      "Event Start Command": "airstart",
+      "Event Stop Command": ""
+    },
+    {
+      "Event Name": "Airfield Event",
+      "Event Enabled": true,
+      "Required Plugin": "AirfieldEvent",
+      "Event Run Time (minutes)": 60,
+      "Event Start Command": "afestart",
+      "Event Stop Command": ""
+    },
+    {
+      "Event Name": "Arctic Base Event",
+      "Event Enabled": true,
+      "Required Plugin": "ArcticBaseEvent",
+      "Event Run Time (minutes)": 60,
+      "Event Start Command": "abstart",
       "Event Stop Command": ""
     },
     {
       "Event Name": "Armored Train",
       "Event Enabled": true,
+      "Required Plugin": "ArmoredTrain",
       "Event Run Time (minutes)": 60,
       "Event Start Command": "atrainstart",
       "Event Stop Command": ""
     },
     {
+      "Event Name": "Boss Monster Clown",
+      "Event Enabled": true,
+      "Required Plugin": "BossMonster",
+      "Event Run Time (minutes)": 60,
+      "Event Start Command": "SpawnBoss Clown",
+      "Event Stop Command": "KillBoss Clown"
+    },
+    {
+      "Event Name": "Boss Monster Evil",
+      "Event Enabled": true,
+      "Required Plugin": "BossMonster",
+      "Event Run Time (minutes)": 60,
+      "Event Start Command": "SpawnBoss Evil",
+      "Event Stop Command": "KillBoss Evil"
+    },
+    {
+      "Event Name": "Boss Monster Franken",
+      "Event Enabled": true,
+      "Required Plugin": "BossMonster",
+      "Event Run Time (minutes)": 60,
+      "Event Start Command": "SpawnBoss Franken",
+      "Event Stop Command": "KillBoss Franken"
+    },
+    {
+      "Event Name": "Boss Monster Frankenstein",
+      "Event Enabled": true,
+      "Required Plugin": "BossMonster",
+      "Event Run Time (minutes)": 60,
+      "Event Start Command": "SpawnBoss Frankenstein",
+      "Event Stop Command": "KillBoss Frankenstein"
+    },
+    {
+      "Event Name": "Boss Monster Heavy",
+      "Event Enabled": true,
+      "Required Plugin": "BossMonster",
+      "Event Run Time (minutes)": 60,
+      "Event Start Command": "SpawnBoss Heavy",
+      "Event Stop Command": "KillBoss Heavy"
+    },
+    {
+      "Event Name": "Boss Monster Horror",
+      "Event Enabled": true,
+      "Required Plugin": "BossMonster",
+      "Event Run Time (minutes)": 60,
+      "Event Start Command": "SpawnBoss Horror",
+      "Event Stop Command": "KillBoss Horror"
+    },
+    {
+      "Event Name": "Boss Monster Jason",
+      "Event Enabled": true,
+      "Required Plugin": "BossMonster",
+      "Event Run Time (minutes)": 60,
+      "Event Start Command": "SpawnBoss Jason",
+      "Event Stop Command": "KillBoss Jason"
+    },
+    {
+      "Event Name": "Boss Monster King of the Night",
+      "Event Enabled": true,
+      "Required Plugin": "BossMonster",
+      "Event Run Time (minutes)": 60,
+      "Event Start Command": "SpawnBoss King of the Night",
+      "Event Stop Command": "KillBoss King of the Night"
+    },
+    {
+      "Event Name": "Boss Monster Michael Myers",
+      "Event Enabled": true,
+      "Required Plugin": "BossMonster",
+      "Event Run Time (minutes)": 60,
+      "Event Start Command": "SpawnBoss Michael Myers",
+      "Event Stop Command": "KillBoss Michael Myers"
+    },
+    {
       "Event Name": "Boss Monster Oni",
       "Event Enabled": true,
+      "Required Plugin": "BossMonster",
       "Event Run Time (minutes)": 60,
       "Event Start Command": "SpawnBoss Oni",
       "Event Stop Command": "KillBoss Oni"
+    },
+    {
+      "Event Name": "Boss Monster Raptor",
+      "Event Enabled": true,
+      "Required Plugin": "BossMonster",
+      "Event Run Time (minutes)": 60,
+      "Event Start Command": "SpawnBoss Raptor",
+      "Event Stop Command": "KillBoss Raptor"
+    },
+    {
+      "Event Name": "Boss Monster Scary",
+      "Event Enabled": true,
+      "Required Plugin": "BossMonster",
+      "Event Run Time (minutes)": 60,
+      "Event Start Command": "SpawnBoss Scary",
+      "Event Stop Command": "KillBoss Scary"
+    },
+    {
+      "Event Name": "Celestial Barrage",
+      "Event Enabled": true,
+      "Required Plugin": "CelestialBarrage",
+      "Event Run Time (minutes)": 5,
+      "Event Start Command": "cb.random",
+      "Event Stop Command": ""
+    },
+    {
+      "Event Name": "Convoy",
+      "Event Enabled": true,
+      "Required Plugin": "Convoy",
+      "Event Run Time (minutes)": 60,
+      "Event Start Command": "convoystart",
+      "Event Stop Command": ""
+    },
+    {
+      "Event Name": "Gas Station Event",
+      "Event Enabled": true,
+      "Required Plugin": "GasStationEvent",
+      "Event Run Time (minutes)": 60,
+      "Event Start Command": "gsstart",
+      "Event Stop Command": ""
+    },
+    {
+      "Event Name": "Gun Game",
+      "Event Enabled": true,
+      "Required Plugin": "GunGame",
+      "Event Run Time (minutes)": 45,
+      "Event Start Command": "ggstart",
+      "Event Stop Command": ""
+    },
+    {
+      "Event Name": "Harbor Event",
+      "Event Enabled": true,
+      "Required Plugin": "HarborEvent",
+      "Event Run Time (minutes)": 60,
+      "Event Start Command": "harborstart",
+      "Event Stop Command": ""
+    },
+    {
+      "Event Name": "Supermarket Event",
+      "Event Enabled": true,
+      "Required Plugin": "SupermarketEvent",
+      "Event Run Time (minutes)": 60,
+      "Event Start Command": "supermarketstart",
+      "Event Stop Command": ""
+    },
+    {
+      "Event Name": "Twister",
+      "Event Enabled": true,
+      "Required Plugin": "Tornado",
+      "Event Run Time (minutes)": 5,
+      "Event Start Command": "tornado start random",
+      "Event Stop Command": ""
+    },
+    {
+      "Event Name": "Water Event",
+      "Event Enabled": true,
+      "Required Plugin": "WaterEvent",
+      "Event Run Time (minutes)": 120,
+      "Event Start Command": "waterstart",
+      "Event Stop Command": ""
     }
   ]
 }
@@ -91,11 +262,14 @@
 |---|---|---|
 | `Event Name` | string | Display name of the event |
 | `Event Enabled` | bool | Set to `false` to skip this event without removing it from the config |
+| `Required Plugin` | string | Oxide plugin name that must be loaded for this event to be scheduled — leave `""` to always include |
 | `Event Run Time (minutes)` | int | How long the event runs before being stopped or expired |
 | `Event Start Command` | string | Server console command to start the event |
 | `Event Stop Command` | string | Server console command to stop the event — leave `""` if self-managed |
 
 > **Note:** Events with an empty `Event Stop Command` are self-managed. The scheduler tracks their run time but does not issue a stop command — the event ends on its own (e.g. a convoy that despawns naturally).
+
+> **Note:** If `Required Plugin` is set and that Oxide plugin is not loaded when the server starts, the event is silently omitted from the queue. A single warning message lists all skipped events and their missing plugins.
 
 ---
 
@@ -104,6 +278,8 @@
 | Command | Access | Description |
 |---|---|---|
 | `!events` | All Players | Shows active events and the next scheduled event with local time and countdown |
+
+> **Anti-spam:** The command has a global 5-minute server-side cooldown. Triggers within that window are silently ignored.
 
 **Example output in chat:**
 ```
@@ -124,7 +300,7 @@ When a webhook URL is configured, the plugin sends Discord embed messages for ev
 
 | Event | Color | Description |
 |---|---|---|
-| Plugin Loaded | 🔵 Blue | Lists all loaded events with run time and stop info |
+| Plugin Loaded | 🔵 Blue | Lists all loaded events by name |
 | Queue Randomized | 🟣 Purple | Shows the new randomized event order |
 | Next Event Scheduled | 🩵 Teal | Event name, scheduled time, and countdown |
 | Event Delayed | 🟠 Orange | Max active events reached — shows new retry time |
@@ -167,6 +343,7 @@ Edit `oxide/config/rCEventScheduler.json` and add a new block to the `"Events"` 
 {
   "Event Name": "My Custom Event",
   "Event Enabled": true,
+  "Required Plugin": "MyPluginName",
   "Event Run Time (minutes)": 45,
   "Event Start Command": "myeventstart",
   "Event Stop Command": ""
