@@ -7,7 +7,7 @@ using Oxide.Core.Libraries;
 
 namespace Oxide.Plugins
 {
-    [Info("Rust Custom Event Scheduler", "Ftuoil Xelrash", "0.0.20")]
+    [Info("Rust Custom Event Scheduler", "Ftuoil Xelrash", "0.0.22")]
     [Description("Schedules and manages custom Rust server events with randomized queues and Discord notifications.")]
     public class rCEventScheduler : RustPlugin
     {
@@ -21,6 +21,7 @@ namespace Oxide.Plugins
         private EventEntry _nextEvent;
         private readonly System.Random _rng = new System.Random();
         private DateTime _lastEventsCommand = DateTime.MinValue;
+        private int _cycleTotal;
 
         private readonly Dictionary<string, string> _headers = new Dictionary<string, string>
         {
@@ -229,13 +230,24 @@ namespace Oxide.Plugins
             ShowEventStatus(player);
         }
 
+        [ChatCommand("events")]
+        private void CmdEvents(BasePlayer player, string command, string[] args)
+        {
+            if (!_config.EnablePlayerCommand) return;
+            if ((DateTime.Now - _lastEventsCommand).TotalMinutes < 5) return;
+
+            _lastEventsCommand = DateTime.Now;
+            ShowEventStatus(player);
+        }
+
         #endregion
 
         #region Scheduler
 
         private void BuildQueue(List<EventEntry> events)
         {
-            _eventQueue = events.OrderBy(_ => _rng.Next()).ToList();
+            _eventQueue  = events.OrderBy(_ => _rng.Next()).ToList();
+            _cycleTotal  = _eventQueue.Count;
 
             string consoleOrder = string.Join(" > ", _eventQueue.Select(e => e.Name));
 
@@ -276,9 +288,12 @@ namespace Oxide.Plugins
 
             _nextEvent = _eventQueue[0];
 
-            int bufferMins = _config.BufferTimeEnabled
+            int bufferMins  = _config.BufferTimeEnabled
                 ? _rng.Next(_config.MinBufferTime, _config.MaxBufferTime + 1)
                 : 0;
+
+            int queuePos    = _cycleTotal - _eventQueue.Count + 1;
+            int afterThis   = _eventQueue.Count - 1;
 
             _nextEventTime = DateTime.Now.AddMinutes(bufferMins);
 
@@ -286,14 +301,16 @@ namespace Oxide.Plugins
             string timeStr = _nextEventTime.ToString("h:mm tt") + " " + tz;
 
             LogEvent(
-                consoleMsg: $"[rCEventScheduler] Next event: {_nextEvent.Name} — scheduled at {timeStr} (in {bufferMins} min)",
+                consoleMsg: $"[rCEventScheduler] Next event: {_nextEvent.Name} — scheduled at {timeStr} (in {bufferMins} min) [{queuePos}/{_cycleTotal}]",
                 title:      "Rust Custom Event Scheduler",
                 desc:       "**Next Event Scheduled**\nThe next event has been queued.",
                 fields:     new List<EmbedField>
                 {
-                    new EmbedField("Event",          _nextEvent.Name,         false),
-                    new EmbedField("Scheduled Time", timeStr,                 false),
-                    new EmbedField("In",             $"{bufferMins} minutes", false)
+                    new EmbedField("Event",                  _nextEvent.Name,                                              false),
+                    new EmbedField("Scheduled Time",         timeStr,                                                      false),
+                    new EmbedField("In",                     $"{bufferMins} minutes",                                      false),
+                    new EmbedField("Queue Position",         $"{queuePos} of {_cycleTotal}",                               false),
+                    new EmbedField("Until Reshuffle",        afterThis == 0 ? "This is the last event — reshuffle next" : $"{afterThis} event(s) after this one", false)
                 },
                 color: EmbedColors.Teal
             );
