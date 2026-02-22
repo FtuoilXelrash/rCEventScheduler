@@ -1,4 +1,4 @@
-![Version](https://img.shields.io/badge/Version-0.0.1-brightgreen) ![Game](https://img.shields.io/badge/Game-Rust-orange) ![Framework](https://img.shields.io/badge/uMod%2FOxide-Oxide-blue) ![License](https://img.shields.io/badge/License-GPL%20v3-lightgrey)
+![Version](https://img.shields.io/badge/Version-0.0.18-brightgreen) ![Game](https://img.shields.io/badge/Game-Rust-orange) ![Framework](https://img.shields.io/badge/uMod%2FOxide-Oxide-blue) ![License](https://img.shields.io/badge/License-GPL%20v3-lightgrey)
 
 # Rust Custom Event Scheduler
 
