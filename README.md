@@ -43,8 +43,8 @@
   "Admin Discord Webhook URL": "",
   "Max Active Events": 1,
   "Event Buffer Time Enabled": true,
-  "Event Min Buffer Time (minutes)": 30,
-  "Event Max Buffer Time (minutes)": 60,
+  "Event Min Buffer Time (minutes)": 15,
+  "Event Max Buffer Time (minutes)": 30,
   "Enable Player Events Command": true,
   "Events": [
     {
@@ -81,8 +81,8 @@
 | `Admin Discord Webhook URL` | `""` | Private Discord webhook URL for admin-only notifications |
 | `Max Active Events` | `1` | Maximum number of events that can run at the same time |
 | `Event Buffer Time Enabled` | `true` | Enable random delay between events |
-| `Event Min Buffer Time (minutes)` | `30` | Minimum random delay (minutes) before next event fires |
-| `Event Max Buffer Time (minutes)` | `60` | Maximum random delay (minutes) before next event fires |
+| `Event Min Buffer Time (minutes)` | `15` | Minimum random delay (minutes) before next event fires |
+| `Event Max Buffer Time (minutes)` | `30` | Maximum random delay (minutes) before next event fires |
 | `Enable Player Events Command` | `true` | Allow all players to use `!events` in chat |
 
 ### Per-Event Options
