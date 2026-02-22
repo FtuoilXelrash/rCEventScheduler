@@ -109,6 +109,7 @@ namespace Oxide.Plugins
                     new EventEntry { Name = "Gas Station Event",              Enabled = true, RequiredPlugin = "GasStationEvent",  RunTime = 60,  StartCommand = "gsstart",                     StopCommand = "" },
                     new EventEntry { Name = "Gun Game",                       Enabled = true, RequiredPlugin = "GunGame",          RunTime = 45,  StartCommand = "ggstart",                     StopCommand = "" },
                     new EventEntry { Name = "Harbor Event",                   Enabled = true, RequiredPlugin = "HarborEvent",      RunTime = 60,  StartCommand = "harborstart",                 StopCommand = "" },
+                    new EventEntry { Name = "Sputnik",                        Enabled = true, RequiredPlugin = "Sputnik",          RunTime = 5,   StartCommand = "sputnikstart",                StopCommand = "" },
                     new EventEntry { Name = "Supermarket Event",              Enabled = true, RequiredPlugin = "SupermarketEvent", RunTime = 60,  StartCommand = "supermarketstart",            StopCommand = "" },
                     new EventEntry { Name = "Twister",                        Enabled = true, RequiredPlugin = "Tornado",           RunTime = 5,   StartCommand = "tornado start random",        StopCommand = "" },
                     new EventEntry { Name = "Water Event",                    Enabled = true, RequiredPlugin = "WaterEvent",       RunTime = 120, StartCommand = "waterstart",                  StopCommand = "" },

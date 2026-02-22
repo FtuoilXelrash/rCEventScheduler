@@ -240,6 +240,14 @@ CONFIGURATION  (oxide/config/rCEventScheduler.json)
         "Event Stop Command": ""
       },
       {
+        "Event Name": "Sputnik",
+        "Event Enabled": true,
+        "Required Plugin": "Sputnik",
+        "Event Run Time (minutes)": 5,
+        "Event Start Command": "sputnikstart",
+        "Event Stop Command": ""
+      },
+      {
         "Event Name": "Supermarket Event",
         "Event Enabled": true,
         "Required Plugin": "SupermarketEvent",

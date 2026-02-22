@@ -31,9 +31,10 @@ To add new events, edit `oxide/config/rCEventScheduler.json` and reload the plug
 | 19 | Gas Station Event | `GasStationEvent` | 60 min | `gsstart` | *(none)* | Self-managed |
 | 20 | Gun Game | `GunGame` | 45 min | `ggstart` | *(none)* | Self-managed |
 | 21 | Harbor Event | `HarborEvent` | 60 min | `harborstart` | *(none)* | Self-managed |
-| 22 | Supermarket Event | `SupermarketEvent` | 60 min | `supermarketstart` | *(none)* | Self-managed |
-| 23 | Twister | `Tornado` | 5 min | `tornado start random` | *(none)* | Self-managed |
-| 24 | Water Event | `WaterEvent` | 120 min | `waterstart` | *(none)* | Self-managed — longer run time |
+| 22 | Sputnik | `Sputnik` | 5 min | `sputnikstart` | *(none)* | Self-managed |
+| 23 | Supermarket Event | `SupermarketEvent` | 60 min | `supermarketstart` | *(none)* | Self-managed |
+| 24 | Twister | `Tornado` | 5 min | `tornado start random` | *(none)* | Self-managed |
+| 25 | Water Event | `WaterEvent` | 120 min | `waterstart` | *(none)* | Self-managed — longer run time |
 
 ---
 
