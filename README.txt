@@ -67,8 +67,8 @@ CONFIGURATION  (oxide/config/rCEventScheduler.json)
     "Admin Discord Webhook URL": "",
     "Max Active Events": 1,
     "Event Buffer Time Enabled": true,
-    "Event Min Buffer Time (minutes)": 30,
-    "Event Max Buffer Time (minutes)": 60,
+    "Event Min Buffer Time (minutes)": 15,
+    "Event Max Buffer Time (minutes)": 30,
     "Enable Player Events Command": true,
     "Events": [
       {
