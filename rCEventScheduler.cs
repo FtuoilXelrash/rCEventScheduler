@@ -16,6 +16,7 @@ namespace Oxide.Plugins
         private PluginConfig _config;
         private List<EventEntry> _eventQueue = new List<EventEntry>();
         private readonly List<string> _activeEvents = new List<string>();
+        private readonly Dictionary<string, DateTime> _activeEventEndTimes = new Dictionary<string, DateTime>();
         private Timer _schedulerTimer;
         private DateTime _nextEventTime = DateTime.MinValue;
         private EventEntry _nextEvent;
@@ -288,65 +289,71 @@ namespace Oxide.Plugins
 
             _nextEvent = _eventQueue[0];
 
-            int bufferMins  = _config.BufferTimeEnabled
+            int bufferSecs = (_config.BufferTimeEnabled
                 ? _rng.Next(_config.MinBufferTime, _config.MaxBufferTime + 1)
-                : 0;
+                : 0) * 60;
 
-            int queuePos    = _cycleTotal - _eventQueue.Count + 1;
-            int afterThis   = _eventQueue.Count - 1;
+            int slotSecs   = _activeEvents.Count >= _config.MaxActiveEvents ? SecsUntilSlot() : 0;
+            int totalSecs  = slotSecs + bufferSecs;
+            int displayMins = totalSecs / 60;
 
-            _nextEventTime = DateTime.Now.AddMinutes(bufferMins);
+            int queuePos  = _cycleTotal - _eventQueue.Count + 1;
+            int afterThis = _eventQueue.Count - 1;
+
+            _nextEventTime = DateTime.Now.AddSeconds(totalSecs);
 
             string tz      = GetTzAbbr();
             string timeStr = _nextEventTime.ToString("h:mm tt") + " " + tz;
 
             LogEvent(
-                consoleMsg: $"[rCEventScheduler] Next event: {_nextEvent.Name} — scheduled at {timeStr} (in {bufferMins} min) [{queuePos}/{_cycleTotal}]",
+                consoleMsg: $"[rCEventScheduler] Next event: {_nextEvent.Name} — scheduled at {timeStr} (in ~{displayMins} min) [{queuePos}/{_cycleTotal}]",
                 title:      "Rust Custom Event Scheduler",
                 desc:       "**Next Event Scheduled**\nThe next event has been queued.",
                 fields:     new List<EmbedField>
                 {
-                    new EmbedField("Event",                  _nextEvent.Name,                                              false),
-                    new EmbedField("Scheduled Time",         timeStr,                                                      false),
-                    new EmbedField("In",                     $"{bufferMins} minutes",                                      false),
-                    new EmbedField("Queue Position",         $"{queuePos} of {_cycleTotal}",                               false),
-                    new EmbedField("Until Reshuffle",        afterThis == 0 ? "This is the last event — reshuffle next" : $"{afterThis} event(s) after this one", false)
+                    new EmbedField("Event",           _nextEvent.Name,                                                                             false),
+                    new EmbedField("Scheduled Time",  timeStr,                                                                                     false),
+                    new EmbedField("In",              $"~{displayMins} minutes",                                                                   false),
+                    new EmbedField("Queue Position",  $"{queuePos} of {_cycleTotal}",                                                              false),
+                    new EmbedField("Until Reshuffle", afterThis == 0 ? "This is the last event — reshuffle next" : $"{afterThis} event(s) after this one", false)
                 },
                 color: EmbedColors.Teal
             );
 
             _schedulerTimer?.Destroy();
-            _schedulerTimer = timer.Once(bufferMins * 60f, TryFire);
+            _schedulerTimer = timer.Once(totalSecs, TryFire);
         }
 
         private void TryFire()
         {
             if (_activeEvents.Count >= _config.MaxActiveEvents)
             {
-                int waitBuf  = _rng.Next(_config.MinBufferTime, _config.MaxBufferTime + 1);
-                int waitMins = _nextEvent.RunTime + waitBuf;
+                int bufferSecs = _rng.Next(_config.MinBufferTime, _config.MaxBufferTime + 1) * 60;
+                int slotSecs   = SecsUntilSlot();
+                int waitSecs   = slotSecs + bufferSecs;
+                int waitMins   = waitSecs / 60;
 
-                _nextEventTime = DateTime.Now.AddMinutes(waitMins);
+                _nextEventTime = DateTime.Now.AddSeconds(waitSecs);
 
                 string tz      = GetTzAbbr();
                 string timeStr = _nextEventTime.ToString("h:mm tt") + " " + tz;
 
                 LogEvent(
-                    consoleMsg: $"[rCEventScheduler] Max active events ({_config.MaxActiveEvents}) reached. {_nextEvent.Name} delayed {waitMins} min — retrying at {timeStr}",
+                    consoleMsg: $"[rCEventScheduler] Max active events ({_config.MaxActiveEvents}) reached. {_nextEvent.Name} delayed ~{waitMins} min — retrying at {timeStr}",
                     title:      "Rust Custom Event Scheduler",
                     desc:       $"**Event Delayed**\nMax active events reached. **{_nextEvent.Name}** has been delayed.",
                     fields:     new List<EmbedField>
                     {
                         new EmbedField("Event",         _nextEvent.Name,                                          false),
                         new EmbedField("Delayed Until", timeStr,                                                  false),
-                        new EmbedField("In",            $"{waitMins} minutes",                                    false),
+                        new EmbedField("In",            $"~{waitMins} minutes",                                   false),
                         new EmbedField("Reason",        $"Max active events ({_config.MaxActiveEvents}) reached", false)
                     },
                     color: EmbedColors.Orange
                 );
 
                 _schedulerTimer?.Destroy();
-                _schedulerTimer = timer.Once(waitMins * 60f, TryFire);
+                _schedulerTimer = timer.Once(waitSecs, TryFire);
                 return;
             }
 
@@ -359,6 +366,7 @@ namespace Oxide.Plugins
         private void FireEvent(EventEntry evt)
         {
             _activeEvents.Add(evt.Name);
+            _activeEventEndTimes[evt.Name] = DateTime.Now.AddMinutes(evt.RunTime);
             RunCmd(evt.StartCommand);
 
             string tz      = GetTzAbbr();
@@ -388,6 +396,7 @@ namespace Oxide.Plugins
                 RunCmd(evt.StopCommand);
 
             _activeEvents.Remove(evt.Name);
+            _activeEventEndTimes.Remove(evt.Name);
 
             string status = string.IsNullOrEmpty(evt.StopCommand)
                 ? "Ended (self-managed)"
@@ -567,6 +576,15 @@ namespace Oxide.Plugins
         #endregion
 
         #region Helpers
+
+        // Returns seconds until the earliest active event is expected to end (0 if no tracked events)
+        private int SecsUntilSlot()
+        {
+            if (_activeEventEndTimes.Count == 0) return 0;
+            DateTime earliest = _activeEventEndTimes.Values.Min();
+            int secs = (int)(earliest - DateTime.Now).TotalSeconds;
+            return Math.Max(secs, 0);
+        }
 
         private void RunCmd(string fullCmd)
         {
