@@ -7,7 +7,7 @@ using Oxide.Core.Libraries;
 
 namespace Oxide.Plugins
 {
-    [Info("Rust Custom Event Scheduler", "Ftuoil Xelrash", "0.0.18")]
+    [Info("Rust Custom Event Scheduler", "Ftuoil Xelrash", "0.0.20")]
     [Description("Schedules and manages custom Rust server events with randomized queues and Discord notifications.")]
     public class rCEventScheduler : RustPlugin
     {
@@ -68,6 +68,9 @@ namespace Oxide.Plugins
             [JsonProperty("Event Enabled")]
             public bool Enabled = true;
 
+            [JsonProperty("Required Plugin")]
+            public string RequiredPlugin = "";
+
             [JsonProperty("Event Run Time (minutes)")]
             public int RunTime = 60;
 
@@ -84,28 +87,28 @@ namespace Oxide.Plugins
             {
                 Events = new List<EventEntry>
                 {
-                    new EventEntry { Name = "AIR EVENT",                      Enabled = true, RunTime = 60,  StartCommand = "airstart",                    StopCommand = "" },
-                    new EventEntry { Name = "Airfield Event",                 Enabled = true, RunTime = 60,  StartCommand = "afestart",                    StopCommand = "" },
-                    new EventEntry { Name = "Arctic Base Event",              Enabled = true, RunTime = 60,  StartCommand = "abstart",                     StopCommand = "" },
-                    new EventEntry { Name = "Armored Train",                  Enabled = true, RunTime = 60,  StartCommand = "atrainstart",                 StopCommand = "" },
-                    new EventEntry { Name = "Boss Monster Clown",             Enabled = true, RunTime = 60,  StartCommand = "SpawnBoss Clown",             StopCommand = "KillBoss Clown" },
-                    new EventEntry { Name = "Boss Monster Evil",              Enabled = true, RunTime = 60,  StartCommand = "SpawnBoss Evil",              StopCommand = "KillBoss Evil" },
-                    new EventEntry { Name = "Boss Monster Franken",           Enabled = true, RunTime = 60,  StartCommand = "SpawnBoss Franken",           StopCommand = "KillBoss Franken" },
-                    new EventEntry { Name = "Boss Monster Frankenstein",      Enabled = true, RunTime = 60,  StartCommand = "SpawnBoss Frankenstein",      StopCommand = "KillBoss Frankenstein" },
-                    new EventEntry { Name = "Boss Monster Heavy",             Enabled = true, RunTime = 60,  StartCommand = "SpawnBoss Heavy",             StopCommand = "KillBoss Heavy" },
-                    new EventEntry { Name = "Boss Monster Horror",            Enabled = true, RunTime = 60,  StartCommand = "SpawnBoss Horror",            StopCommand = "KillBoss Horror" },
-                    new EventEntry { Name = "Boss Monster Jason",             Enabled = true, RunTime = 60,  StartCommand = "SpawnBoss Jason",             StopCommand = "KillBoss Jason" },
-                    new EventEntry { Name = "Boss Monster King of the Night", Enabled = true, RunTime = 60,  StartCommand = "SpawnBoss King of the Night", StopCommand = "KillBoss King of the Night" },
-                    new EventEntry { Name = "Boss Monster Michael Myers",     Enabled = true, RunTime = 60,  StartCommand = "SpawnBoss Michael Myers",     StopCommand = "KillBoss Michael Myers" },
-                    new EventEntry { Name = "Boss Monster Oni",               Enabled = true, RunTime = 60,  StartCommand = "SpawnBoss Oni",               StopCommand = "KillBoss Oni" },
-                    new EventEntry { Name = "Boss Monster Raptor",            Enabled = true, RunTime = 60,  StartCommand = "SpawnBoss Raptor",            StopCommand = "KillBoss Raptor" },
-                    new EventEntry { Name = "Boss Monster Scary",             Enabled = true, RunTime = 60,  StartCommand = "SpawnBoss Scary",             StopCommand = "KillBoss Scary" },
-                    new EventEntry { Name = "Convoy",                         Enabled = true, RunTime = 60,  StartCommand = "convoystart",                 StopCommand = "" },
-                    new EventEntry { Name = "Gas Station Event",              Enabled = true, RunTime = 60,  StartCommand = "gsstart",                     StopCommand = "" },
-                    new EventEntry { Name = "Gun Game",                       Enabled = true, RunTime = 45,  StartCommand = "ggstart",                     StopCommand = "" },
-                    new EventEntry { Name = "Harbor Event",                   Enabled = true, RunTime = 60,  StartCommand = "harborstart",                 StopCommand = "" },
-                    new EventEntry { Name = "Supermarket Event",              Enabled = true, RunTime = 60,  StartCommand = "supermarketstart",            StopCommand = "" },
-                    new EventEntry { Name = "Water Event",                    Enabled = true, RunTime = 120, StartCommand = "waterstart",                  StopCommand = "" },
+                    new EventEntry { Name = "AIR EVENT",                      Enabled = true, RequiredPlugin = "AirEvent",         RunTime = 60,  StartCommand = "airstart",                    StopCommand = "" },
+                    new EventEntry { Name = "Airfield Event",                 Enabled = true, RequiredPlugin = "AirfieldEvent",    RunTime = 60,  StartCommand = "afestart",                    StopCommand = "" },
+                    new EventEntry { Name = "Arctic Base Event",              Enabled = true, RequiredPlugin = "ArcticBaseEvent",  RunTime = 60,  StartCommand = "abstart",                     StopCommand = "" },
+                    new EventEntry { Name = "Armored Train",                  Enabled = true, RequiredPlugin = "ArmoredTrain",     RunTime = 60,  StartCommand = "atrainstart",                 StopCommand = "" },
+                    new EventEntry { Name = "Boss Monster Clown",             Enabled = true, RequiredPlugin = "BossMonster",      RunTime = 60,  StartCommand = "SpawnBoss Clown",             StopCommand = "KillBoss Clown" },
+                    new EventEntry { Name = "Boss Monster Evil",              Enabled = true, RequiredPlugin = "BossMonster",      RunTime = 60,  StartCommand = "SpawnBoss Evil",              StopCommand = "KillBoss Evil" },
+                    new EventEntry { Name = "Boss Monster Franken",           Enabled = true, RequiredPlugin = "BossMonster",      RunTime = 60,  StartCommand = "SpawnBoss Franken",           StopCommand = "KillBoss Franken" },
+                    new EventEntry { Name = "Boss Monster Frankenstein",      Enabled = true, RequiredPlugin = "BossMonster",      RunTime = 60,  StartCommand = "SpawnBoss Frankenstein",      StopCommand = "KillBoss Frankenstein" },
+                    new EventEntry { Name = "Boss Monster Heavy",             Enabled = true, RequiredPlugin = "BossMonster",      RunTime = 60,  StartCommand = "SpawnBoss Heavy",             StopCommand = "KillBoss Heavy" },
+                    new EventEntry { Name = "Boss Monster Horror",            Enabled = true, RequiredPlugin = "BossMonster",      RunTime = 60,  StartCommand = "SpawnBoss Horror",            StopCommand = "KillBoss Horror" },
+                    new EventEntry { Name = "Boss Monster Jason",             Enabled = true, RequiredPlugin = "BossMonster",      RunTime = 60,  StartCommand = "SpawnBoss Jason",             StopCommand = "KillBoss Jason" },
+                    new EventEntry { Name = "Boss Monster King of the Night", Enabled = true, RequiredPlugin = "BossMonster",      RunTime = 60,  StartCommand = "SpawnBoss King of the Night", StopCommand = "KillBoss King of the Night" },
+                    new EventEntry { Name = "Boss Monster Michael Myers",     Enabled = true, RequiredPlugin = "BossMonster",      RunTime = 60,  StartCommand = "SpawnBoss Michael Myers",     StopCommand = "KillBoss Michael Myers" },
+                    new EventEntry { Name = "Boss Monster Oni",               Enabled = true, RequiredPlugin = "BossMonster",      RunTime = 60,  StartCommand = "SpawnBoss Oni",               StopCommand = "KillBoss Oni" },
+                    new EventEntry { Name = "Boss Monster Raptor",            Enabled = true, RequiredPlugin = "BossMonster",      RunTime = 60,  StartCommand = "SpawnBoss Raptor",            StopCommand = "KillBoss Raptor" },
+                    new EventEntry { Name = "Boss Monster Scary",             Enabled = true, RequiredPlugin = "BossMonster",      RunTime = 60,  StartCommand = "SpawnBoss Scary",             StopCommand = "KillBoss Scary" },
+                    new EventEntry { Name = "Convoy",                         Enabled = true, RequiredPlugin = "Convoy",           RunTime = 60,  StartCommand = "convoystart",                 StopCommand = "" },
+                    new EventEntry { Name = "Gas Station Event",              Enabled = true, RequiredPlugin = "GasStationEvent",  RunTime = 60,  StartCommand = "gsstart",                     StopCommand = "" },
+                    new EventEntry { Name = "Gun Game",                       Enabled = true, RequiredPlugin = "GunGame",          RunTime = 45,  StartCommand = "ggstart",                     StopCommand = "" },
+                    new EventEntry { Name = "Harbor Event",                   Enabled = true, RequiredPlugin = "HarborEvent",      RunTime = 60,  StartCommand = "harborstart",                 StopCommand = "" },
+                    new EventEntry { Name = "Supermarket Event",              Enabled = true, RequiredPlugin = "SupermarketEvent", RunTime = 60,  StartCommand = "supermarketstart",            StopCommand = "" },
+                    new EventEntry { Name = "Water Event",                    Enabled = true, RequiredPlugin = "WaterEvent",       RunTime = 120, StartCommand = "waterstart",                  StopCommand = "" },
                 }
             };
             SaveConfig();
@@ -145,25 +148,66 @@ namespace Oxide.Plugins
                 return;
             }
 
-            string names = string.Join(", ", enabled.Select(e => e.Name));
+            // Validate required plugins
+            var valid   = new List<EventEntry>();
+            var skipped = new List<EventEntry>();
 
-            string eventList = string.Join("\n", enabled.Select(e =>
+            foreach (var evt in enabled)
+            {
+                if (!string.IsNullOrEmpty(evt.RequiredPlugin) && plugins.Find(evt.RequiredPlugin) == null)
+                    skipped.Add(evt);
+                else
+                    valid.Add(evt);
+            }
+
+            if (valid.Count == 0)
+            {
+                PrintWarning("[rCEventScheduler] No valid events after plugin validation. Scheduler will not start.");
+                return;
+            }
+
+            // Plugin Loaded message — valid events only
+            string names     = string.Join(", ", valid.Select(e => e.Name));
+            string eventList = string.Join("\n", valid.Select(e =>
                 $"• **{e.Name}** — {e.RunTime} min" +
                 (string.IsNullOrEmpty(e.StopCommand) ? "" : "  *(has stop command)*")
             ));
 
             LogEvent(
-                consoleMsg: $"[rCEventScheduler] {enabled.Count} event(s) loaded: {names}",
+                consoleMsg: $"[rCEventScheduler] {valid.Count} event(s) loaded: {names}",
                 title:      "Rust Custom Event Scheduler",
-                desc:       $"Plugin loaded — **{enabled.Count} event(s)** are ready to schedule.",
+                desc:       $"Plugin loaded — **{valid.Count} event(s)** are ready to schedule.",
                 fields:     new List<EmbedField> { new EmbedField("Loaded Events", eventList, false) },
                 color:      EmbedColors.Blue
             );
 
             timer.Once(2f, () =>
             {
-                BuildQueue(enabled);
-                timer.Once(2f, ScheduleNext);
+                // Skipped events message (one combined message after load)
+                if (skipped.Count > 0)
+                {
+                    string skippedList = string.Join("\n", skipped.Select(e => $"• {e.Name}  —  plugin: {e.RequiredPlugin}"));
+                    string skippedNames = string.Join(", ", skipped.Select(e => e.Name));
+
+                    LogEvent(
+                        consoleMsg: $"[rCEventScheduler] {skipped.Count} event(s) skipped — required plugin not loaded: {skippedNames}",
+                        title:      "Rust Custom Event Scheduler",
+                        desc:       $"**Events Skipped — Plugin Not Loaded**\n{skipped.Count} event(s) were omitted from the scheduler.",
+                        fields:     new List<EmbedField> { new EmbedField("Skipped Events", skippedList, false) },
+                        color:      EmbedColors.Orange
+                    );
+
+                    timer.Once(2f, () =>
+                    {
+                        BuildQueue(valid);
+                        timer.Once(2f, ScheduleNext);
+                    });
+                }
+                else
+                {
+                    BuildQueue(valid);
+                    timer.Once(2f, ScheduleNext);
+                }
             });
         }
 
@@ -288,7 +332,7 @@ namespace Oxide.Plugins
             var evt = _nextEvent;
             _eventQueue.RemoveAt(0);
             FireEvent(evt);
-            ScheduleNext();
+            timer.Once(2f, ScheduleNext);
         }
 
         private void FireEvent(EventEntry evt)
