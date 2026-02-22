@@ -1,6 +1,6 @@
 ================================================================================
   Rust Custom Event Scheduler
-  Version: 0.0.1  |  Author: Ftuoil Xelrash  |  License: GPL v3
+  Version: 0.0.18  |  Author: Ftuoil Xelrash  |  License: GPL v3
   Platform: uMod / Oxide for Rust
 ================================================================================
 
