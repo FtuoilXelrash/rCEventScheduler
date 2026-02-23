@@ -263,6 +263,7 @@
 | `Event Min Buffer Time (minutes)` | `5` | Minimum random delay (minutes) before next event fires |
 | `Event Max Buffer Time (minutes)` | `15` | Maximum random delay (minutes) before next event fires |
 | `Enable Player Events Command` | `true` | Allow all players to use `!events` in chat |
+| `Show Next Event Scheduled on Event End` | `true` | After an event ends, re-send the Next Event Scheduled Discord embed as a reminder |
 
 ### Per-Event Options
 

@@ -59,6 +59,9 @@ namespace Oxide.Plugins
             [JsonProperty("Enable Player Events Command")]
             public bool EnablePlayerCommand = true;
 
+            [JsonProperty("Show Next Event Scheduled on Event End")]
+            public bool ShowNextEventOnEnd = true;
+
             [JsonProperty("Events")]
             public List<EventEntry> Events = new List<EventEntry>();
         }
@@ -424,6 +427,34 @@ namespace Oxide.Plugins
                 },
                 color: EmbedColors.Orange
             );
+
+            if (_config.ShowNextEventOnEnd && _config.LogToDiscord && !string.IsNullOrEmpty(_config.WebhookUrl)
+                && _nextEvent != null && _nextEventTime > DateTime.Now)
+            {
+                timer.Once(2f, () =>
+                {
+                    int queuePos  = _cycleTotal - _eventQueue.Count + 1;
+                    int afterThis = _eventQueue.Count - 1;
+
+                    string tz         = GetTzAbbr();
+                    string timeStr    = _nextEventTime.ToString("h:mm tt") + " " + tz;
+                    int    displayMins = (int)(_nextEventTime - DateTime.Now).TotalMinutes;
+
+                    SendEmbed(
+                        "Rust Custom Event Scheduler",
+                        "**Next Event Scheduled**\nReminder after event end.",
+                        new List<EmbedField>
+                        {
+                            new EmbedField("Event",           _nextEvent.Name,                                                                                     false),
+                            new EmbedField("Scheduled Time",  timeStr,                                                                                             false),
+                            new EmbedField("In",              $"~{displayMins} minutes",                                                                           false),
+                            new EmbedField("Queue Position",  $"{queuePos} of {_cycleTotal}",                                                                      false),
+                            new EmbedField("Until Reshuffle", afterThis == 0 ? "This is the last event — reshuffle next" : $"{afterThis} event(s) after this one", false)
+                        },
+                        EmbedColors.Teal
+                    );
+                });
+            }
         }
 
         #endregion

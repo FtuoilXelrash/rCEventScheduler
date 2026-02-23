@@ -284,6 +284,8 @@ CONFIGURATION  (oxide/config/rCEventScheduler.json)
   Event Min Buffer Time (min)    Minimum random delay before next event
   Event Max Buffer Time (min)    Maximum random delay before next event
   Enable Player Events Command   Allow players to use !events in chat
+  Show Next Event Scheduled      After an event ends, re-send the Next Event
+  on Event End                   Scheduled Discord embed as a reminder (true)
 
   PER-EVENT OPTIONS
   -----------------
