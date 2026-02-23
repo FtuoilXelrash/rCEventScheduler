@@ -7,7 +7,7 @@ using Oxide.Core.Libraries;
 
 namespace Oxide.Plugins
 {
-    [Info("Rust Custom Event Scheduler", "Ftuoil Xelrash", "0.0.26")]
+    [Info("Rust Custom Event Scheduler", "Ftuoil Xelrash", "0.0.28")]
     [Description("Schedules and manages custom Rust server events with randomized queues and Discord notifications.")]
     public class rCEventScheduler : RustPlugin
     {
@@ -181,7 +181,7 @@ namespace Oxide.Plugins
 
             LogEvent(
                 consoleMsg: $"[rCEventScheduler] {valid.Count} event(s) loaded: {names}",
-                title:      "Rust Custom Event Scheduler",
+                title:      $"{ConVar.Server.hostname} Event Scheduler",
                 desc:       $"Plugin loaded — **{valid.Count} event(s)** are ready to schedule.",
                 fields:     new List<EmbedField> { new EmbedField("Loaded Events", eventList, false) },
                 color:      EmbedColors.Blue
@@ -197,7 +197,7 @@ namespace Oxide.Plugins
 
                     LogEvent(
                         consoleMsg: $"[rCEventScheduler] {skipped.Count} event(s) skipped — required plugin not loaded: {skippedNames}",
-                        title:      "Rust Custom Event Scheduler",
+                        title:      $"{ConVar.Server.hostname} Event Scheduler",
                         desc:       $"**Events Skipped — Plugin Not Loaded**\n{skipped.Count} event(s) were omitted from the scheduler.",
                         fields:     new List<EmbedField> { new EmbedField("Skipped Events", skippedList, false) },
                         color:      EmbedColors.Orange
@@ -251,7 +251,7 @@ namespace Oxide.Plugins
             if (elapsed >= 300) return false;
 
             int secsLeft = (int)(300 - elapsed) + 1;
-            player.ChatMessage($"<color=#E67E22>[ Rust Custom Event Scheduler ]</color>\n<color=#95A5A6>Command on cooldown. Try again in <color=#F1C40F>{secsLeft}s</color>.</color>");
+            player.ChatMessage($"<color=#E67E22>[ {ConVar.Server.hostname} Event Scheduler ]</color>\n<color=#95A5A6>Command on cooldown. Try again in <color=#F1C40F>{secsLeft}s</color>.</color>");
             return true;
         }
 
@@ -271,7 +271,7 @@ namespace Oxide.Plugins
 
             LogEvent(
                 consoleMsg: $"[rCEventScheduler] Randomized event queue: {consoleOrder}",
-                title:      "Rust Custom Event Scheduler",
+                title:      $"{ConVar.Server.hostname} Event Scheduler",
                 desc:       $"A new randomized event queue has been built.\n**{_eventQueue.Count} event(s)** in this cycle.",
                 fields:     new List<EmbedField> { new EmbedField("Queue Order", numberedList, false) },
                 color:      EmbedColors.Purple
@@ -309,7 +309,7 @@ namespace Oxide.Plugins
                 // Staggered: T+0 Cycle Complete → T+2s Queue Randomized → T+4s Next Event Scheduled
                 LogEvent(
                     consoleMsg: "[rCEventScheduler] All events have run. Starting a new cycle.",
-                    title:      "Rust Custom Event Scheduler",
+                    title:      $"{ConVar.Server.hostname} Event Scheduler",
                     desc:       "**Cycle Complete**\nAll events in the cycle have run. A fresh randomized cycle is starting.",
                     fields:     null,
                     color:      EmbedColors.Purple
@@ -348,7 +348,7 @@ namespace Oxide.Plugins
 
             LogEvent(
                 consoleMsg: $"[rCEventScheduler] Next event: {_nextEvent.Name} — scheduled at {timeStr} (in ~{displayMins} min) [{queuePos}/{_cycleTotal}]",
-                title:      "Rust Custom Event Scheduler",
+                title:      $"{ConVar.Server.hostname} Event Scheduler",
                 desc:       "**Next Event Scheduled**\nThe next event has been queued.",
                 fields:     new List<EmbedField>
                 {
@@ -381,7 +381,7 @@ namespace Oxide.Plugins
 
                 LogEvent(
                     consoleMsg: $"[rCEventScheduler] Max active events ({_config.MaxActiveEvents}) reached. {_nextEvent.Name} delayed ~{waitMins} min — retrying at {timeStr}",
-                    title:      "Rust Custom Event Scheduler",
+                    title:      $"{ConVar.Server.hostname} Event Scheduler",
                     desc:       $"**Event Delayed**\nMax active events reached. **{_nextEvent.Name}** has been delayed.",
                     fields:     new List<EmbedField>
                     {
@@ -416,7 +416,7 @@ namespace Oxide.Plugins
 
             LogEvent(
                 consoleMsg: $"[rCEventScheduler] >> Event STARTED: {evt.Name}  |  Runs until ~{endTime}",
-                title:      "Rust Custom Event Scheduler",
+                title:      $"{ConVar.Server.hostname} Event Scheduler",
                 desc:       $"**Event Started**\n**{evt.Name}** is now active!",
                 fields:     new List<EmbedField>
                 {
@@ -445,7 +445,7 @@ namespace Oxide.Plugins
 
             LogEvent(
                 consoleMsg: $"[rCEventScheduler] -- Event ENDED: {evt.Name}  ({status})",
-                title:      "Rust Custom Event Scheduler",
+                title:      $"{ConVar.Server.hostname} Event Scheduler",
                 desc:       $"**Event Ended**\n**{evt.Name}** has ended.",
                 fields:     new List<EmbedField>
                 {
@@ -468,7 +468,7 @@ namespace Oxide.Plugins
                     int    displayMins = (int)(_nextEventTime - DateTime.Now).TotalMinutes;
 
                     SendEmbed(
-                        "Rust Custom Event Scheduler",
+                        $"{ConVar.Server.hostname} Event Scheduler",
                         "**Next Event Scheduled**\nReminder after event end.",
                         new List<EmbedField>
                         {
@@ -493,7 +493,7 @@ namespace Oxide.Plugins
             string tz = GetTzAbbr();
             var sb = new StringBuilder();
 
-            sb.Append("<color=#00BFFF><b>[ Rust Custom Event Scheduler ]</b></color>\n");
+            sb.Append($"<color=#00BFFF><b>[ {ConVar.Server.hostname} Event Scheduler ]</b></color>\n");
 
             if (_activeEvents.Count > 0)
             {

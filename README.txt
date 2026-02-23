@@ -1,6 +1,6 @@
 ================================================================================
   Rust Custom Event Scheduler
-  Version: 0.0.26  |  Author: Ftuoil Xelrash  |  License: GPL v3
+  Version: 0.0.28  |  Author: Ftuoil Xelrash  |  License: GPL v3
   Platform: uMod / Oxide for Rust
 ================================================================================
 
@@ -313,11 +313,13 @@ PLAYER COMMAND
             seconds remaining when command is on cooldown
 
   Example output:
-    [ Rust Custom Event Scheduler ]
+    [ My Rust Server Event Scheduler ]
     Active Events:
       - Boss Monster Oni
     Next Event: Convoy
     Starts at: 4:23 PM CST  (~38 min)
+
+  Note: The header uses your server name automatically (ConVar.Server.hostname)
 
   Disable with: "Enable Player Events Command": false
 
@@ -326,6 +328,8 @@ DISCORD NOTIFICATIONS
 --------------------------------------------------------------------------------
 
   When a webhook URL is configured, the plugin sends embed messages for:
+  All embed titles use your server's name automatically (e.g. "My Server Event Scheduler")
+
 
   Plugin Loaded       Lists all loaded events
   Queue Randomized    Shows the new randomized event order

@@ -1,4 +1,4 @@
-![Version](https://img.shields.io/badge/Version-0.0.26-brightgreen) ![Game](https://img.shields.io/badge/Game-Rust-orange) ![Framework](https://img.shields.io/badge/uMod%2FOxide-Oxide-blue) ![License](https://img.shields.io/badge/License-GPL%20v3-lightgrey)
+![Version](https://img.shields.io/badge/Version-0.0.28-brightgreen) ![Game](https://img.shields.io/badge/Game-Rust-orange) ![Framework](https://img.shields.io/badge/uMod%2FOxide-Oxide-blue) ![License](https://img.shields.io/badge/License-GPL%20v3-lightgrey)
 
 # Rust Custom Event Scheduler
 
@@ -294,12 +294,14 @@
 
 **Example output in chat:**
 ```
-[ Rust Custom Event Scheduler ]
+[ My Rust Server Event Scheduler ]
 Active Events:
   ● Boss Monster Oni
 Next Event: Convoy
 Starts at: 4:23 PM CST  (~38 min)
 ```
+
+> The header uses your server's name automatically, pulled from `ConVar.Server.hostname` (your `server.cfg` hostname).
 
 > Disable this command in config with `"Enable Player Events Command": false`
 
@@ -307,7 +309,7 @@ Starts at: 4:23 PM CST  (~38 min)
 
 ## 📣 Discord Notifications
 
-When a webhook URL is configured, the plugin sends Discord embed messages for every scheduler action:
+When a webhook URL is configured, the plugin sends Discord embed messages for every scheduler action. All embed titles use your server's name automatically (e.g. `My Rust Server Event Scheduler`).
 
 | Event | Color | Description |
 |---|---|---|
