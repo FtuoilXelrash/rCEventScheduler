@@ -12,7 +12,7 @@ To add new events, edit `oxide/config/rCEventScheduler.json` and reload the plug
 |---|---|---|---|---|---|---|
 | 1 | Air Event | `AirEvent` | 60 min | `airstart` | *(none)* | Self-managed |
 | 2 | Airfield Event | `AirfieldEvent` | 60 min | `afestart` | *(none)* | Self-managed |
-| 3 | Arctic Base Event | `ArcticBaseEvent` | 60 min | `abstart` | *(none)* | Self-managed |
+| 3 | Arctic Base Event | `ArcticBaseEvent` | 45 min | `abstart` | *(none)* | Self-managed |
 | 4 | Armored Train | `ArmoredTrain` | 60 min | `atrainstart` | *(none)* | Self-managed |
 | 5 | Boss Monster Clown | `BossMonster` | 60 min | `SpawnBoss Clown` | `KillBoss Clown` | Requires stop command |
 | 6 | Boss Monster Evil | `BossMonster` | 60 min | `SpawnBoss Evil` | `KillBoss Evil` | Requires stop command |
@@ -28,11 +28,11 @@ To add new events, edit `oxide/config/rCEventScheduler.json` and reload the plug
 | 16 | Boss Monster Scary | `BossMonster` | 60 min | `SpawnBoss Scary` | `KillBoss Scary` | Requires stop command |
 | 17 | Celestial Barrage | `CelestialBarrage` | 5 min | `cb.random` | *(none)* | Self-managed |
 | 18 | Convoy | `Convoy` | 60 min | `convoystart` | *(none)* | Self-managed |
-| 19 | Gas Station Event | `GasStationEvent` | 60 min | `gsstart` | *(none)* | Self-managed |
+| 19 | Gas Station Event | `GasStationEvent` | 45 min | `gsstart` | *(none)* | Self-managed |
 | 20 | Gun Game | `GunGame` | 45 min | `ggstart` | *(none)* | Self-managed |
 | 21 | Harbor Event | `HarborEvent` | 60 min | `harborstart` | *(none)* | Self-managed |
-| 22 | Sputnik | `Sputnik` | 5 min | `sputnikstart` | *(none)* | Self-managed |
-| 23 | Supermarket Event | `SupermarketEvent` | 60 min | `supermarketstart` | *(none)* | Self-managed |
+| 22 | Sputnik | `Sputnik` | 60 min | `sputnikstart` | *(none)* | Self-managed — disabled by default |
+| 23 | Supermarket Event | `SupermarketEvent` | 45 min | `supermarketstart` | *(none)* | Self-managed |
 | 24 | Twister | `Tornado` | 5 min | `tornado start random` | *(none)* | Self-managed |
 | 25 | Water Event | `WaterEvent` | 120 min | `waterstart` | *(none)* | Self-managed — longer run time |
 

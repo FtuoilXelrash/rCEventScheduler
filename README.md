@@ -1,4 +1,4 @@
-![Version](https://img.shields.io/badge/Version-0.0.22-brightgreen) ![Game](https://img.shields.io/badge/Game-Rust-orange) ![Framework](https://img.shields.io/badge/uMod%2FOxide-Oxide-blue) ![License](https://img.shields.io/badge/License-GPL%20v3-lightgrey)
+![Version](https://img.shields.io/badge/Version-0.0.23-brightgreen) ![Game](https://img.shields.io/badge/Game-Rust-orange) ![Framework](https://img.shields.io/badge/uMod%2FOxide-Oxide-blue) ![License](https://img.shields.io/badge/License-GPL%20v3-lightgrey)
 
 # Rust Custom Event Scheduler
 
@@ -43,8 +43,8 @@
   "Admin Discord Webhook URL": "",
   "Max Active Events": 1,
   "Event Buffer Time Enabled": true,
-  "Event Min Buffer Time (minutes)": 15,
-  "Event Max Buffer Time (minutes)": 30,
+  "Event Min Buffer Time (minutes)": 5,
+  "Event Max Buffer Time (minutes)": 15,
   "Enable Player Events Command": true,
   "Events": [
     {
@@ -67,7 +67,7 @@
       "Event Name": "Arctic Base Event",
       "Event Enabled": true,
       "Required Plugin": "ArcticBaseEvent",
-      "Event Run Time (minutes)": 60,
+      "Event Run Time (minutes)": 45,
       "Event Start Command": "abstart",
       "Event Stop Command": ""
     },
@@ -195,7 +195,7 @@
       "Event Name": "Gas Station Event",
       "Event Enabled": true,
       "Required Plugin": "GasStationEvent",
-      "Event Run Time (minutes)": 60,
+      "Event Run Time (minutes)": 45,
       "Event Start Command": "gsstart",
       "Event Stop Command": ""
     },
@@ -217,9 +217,9 @@
     },
     {
       "Event Name": "Sputnik",
-      "Event Enabled": true,
+      "Event Enabled": false,
       "Required Plugin": "Sputnik",
-      "Event Run Time (minutes)": 5,
+      "Event Run Time (minutes)": 60,
       "Event Start Command": "sputnikstart",
       "Event Stop Command": ""
     },
@@ -227,7 +227,7 @@
       "Event Name": "Supermarket Event",
       "Event Enabled": true,
       "Required Plugin": "SupermarketEvent",
-      "Event Run Time (minutes)": 60,
+      "Event Run Time (minutes)": 45,
       "Event Start Command": "supermarketstart",
       "Event Stop Command": ""
     },
@@ -260,8 +260,8 @@
 | `Admin Discord Webhook URL` | `""` | Private Discord webhook URL for admin-only notifications |
 | `Max Active Events` | `1` | Maximum number of events that can run at the same time |
 | `Event Buffer Time Enabled` | `true` | Enable random delay between events |
-| `Event Min Buffer Time (minutes)` | `15` | Minimum random delay (minutes) before next event fires |
-| `Event Max Buffer Time (minutes)` | `30` | Maximum random delay (minutes) before next event fires |
+| `Event Min Buffer Time (minutes)` | `5` | Minimum random delay (minutes) before next event fires |
+| `Event Max Buffer Time (minutes)` | `15` | Maximum random delay (minutes) before next event fires |
 | `Enable Player Events Command` | `true` | Allow all players to use `!events` in chat |
 
 ### Per-Event Options

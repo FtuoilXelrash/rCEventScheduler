@@ -7,7 +7,7 @@ using Oxide.Core.Libraries;
 
 namespace Oxide.Plugins
 {
-    [Info("Rust Custom Event Scheduler", "Ftuoil Xelrash", "0.0.22")]
+    [Info("Rust Custom Event Scheduler", "Ftuoil Xelrash", "0.0.23")]
     [Description("Schedules and manages custom Rust server events with randomized queues and Discord notifications.")]
     public class rCEventScheduler : RustPlugin
     {
@@ -51,10 +51,10 @@ namespace Oxide.Plugins
             public bool BufferTimeEnabled = true;
 
             [JsonProperty("Event Min Buffer Time (minutes)")]
-            public int MinBufferTime = 15;
+            public int MinBufferTime = 5;
 
             [JsonProperty("Event Max Buffer Time (minutes)")]
-            public int MaxBufferTime = 30;
+            public int MaxBufferTime = 15;
 
             [JsonProperty("Enable Player Events Command")]
             public bool EnablePlayerCommand = true;
@@ -92,7 +92,7 @@ namespace Oxide.Plugins
                 {
                     new EventEntry { Name = "Air Event",                      Enabled = true, RequiredPlugin = "AirEvent",         RunTime = 60,  StartCommand = "airstart",                    StopCommand = "" },
                     new EventEntry { Name = "Airfield Event",                 Enabled = true, RequiredPlugin = "AirfieldEvent",    RunTime = 60,  StartCommand = "afestart",                    StopCommand = "" },
-                    new EventEntry { Name = "Arctic Base Event",              Enabled = true, RequiredPlugin = "ArcticBaseEvent",  RunTime = 60,  StartCommand = "abstart",                     StopCommand = "" },
+                    new EventEntry { Name = "Arctic Base Event",              Enabled = true, RequiredPlugin = "ArcticBaseEvent",  RunTime = 45,  StartCommand = "abstart",                     StopCommand = "" },
                     new EventEntry { Name = "Armored Train",                  Enabled = true, RequiredPlugin = "ArmoredTrain",     RunTime = 60,  StartCommand = "atrainstart",                 StopCommand = "" },
                     new EventEntry { Name = "Boss Monster Clown",             Enabled = true, RequiredPlugin = "BossMonster",      RunTime = 60,  StartCommand = "SpawnBoss Clown",             StopCommand = "KillBoss Clown" },
                     new EventEntry { Name = "Boss Monster Evil",              Enabled = true, RequiredPlugin = "BossMonster",      RunTime = 60,  StartCommand = "SpawnBoss Evil",              StopCommand = "KillBoss Evil" },
@@ -108,11 +108,11 @@ namespace Oxide.Plugins
                     new EventEntry { Name = "Boss Monster Scary",             Enabled = true, RequiredPlugin = "BossMonster",      RunTime = 60,  StartCommand = "SpawnBoss Scary",             StopCommand = "KillBoss Scary" },
                     new EventEntry { Name = "Celestial Barrage",              Enabled = true, RequiredPlugin = "CelestialBarrage", RunTime = 5,   StartCommand = "cb.random",                   StopCommand = "" },
                     new EventEntry { Name = "Convoy",                         Enabled = true, RequiredPlugin = "Convoy",           RunTime = 60,  StartCommand = "convoystart",                 StopCommand = "" },
-                    new EventEntry { Name = "Gas Station Event",              Enabled = true, RequiredPlugin = "GasStationEvent",  RunTime = 60,  StartCommand = "gsstart",                     StopCommand = "" },
+                    new EventEntry { Name = "Gas Station Event",              Enabled = true, RequiredPlugin = "GasStationEvent",  RunTime = 45,  StartCommand = "gsstart",                     StopCommand = "" },
                     new EventEntry { Name = "Gun Game",                       Enabled = true, RequiredPlugin = "GunGame",          RunTime = 45,  StartCommand = "ggstart",                     StopCommand = "" },
                     new EventEntry { Name = "Harbor Event",                   Enabled = true, RequiredPlugin = "HarborEvent",      RunTime = 60,  StartCommand = "harborstart",                 StopCommand = "" },
-                    new EventEntry { Name = "Sputnik",                        Enabled = true, RequiredPlugin = "Sputnik",          RunTime = 5,   StartCommand = "sputnikstart",                StopCommand = "" },
-                    new EventEntry { Name = "Supermarket Event",              Enabled = true, RequiredPlugin = "SupermarketEvent", RunTime = 60,  StartCommand = "supermarketstart",            StopCommand = "" },
+                    new EventEntry { Name = "Sputnik",                        Enabled = false, RequiredPlugin = "Sputnik",          RunTime = 60,  StartCommand = "sputnikstart",                StopCommand = "" },
+                    new EventEntry { Name = "Supermarket Event",              Enabled = true, RequiredPlugin = "SupermarketEvent", RunTime = 45,  StartCommand = "supermarketstart",            StopCommand = "" },
                     new EventEntry { Name = "Twister",                        Enabled = true, RequiredPlugin = "Tornado",           RunTime = 5,   StartCommand = "tornado start random",        StopCommand = "" },
                     new EventEntry { Name = "Water Event",                    Enabled = true, RequiredPlugin = "WaterEvent",       RunTime = 120, StartCommand = "waterstart",                  StopCommand = "" },
                 }
@@ -225,7 +225,7 @@ namespace Oxide.Plugins
             if (string.IsNullOrEmpty(message)) return;
             if (message.Trim().ToLower() != "!events") return;
 
-            if ((DateTime.Now - _lastEventsCommand).TotalMinutes < 5) return;
+            if (IsEventsCooldownActive(player)) return;
 
             _lastEventsCommand = DateTime.Now;
             ShowEventStatus(player);
@@ -235,10 +235,21 @@ namespace Oxide.Plugins
         private void CmdEvents(BasePlayer player, string command, string[] args)
         {
             if (!_config.EnablePlayerCommand) return;
-            if ((DateTime.Now - _lastEventsCommand).TotalMinutes < 5) return;
+
+            if (IsEventsCooldownActive(player)) return;
 
             _lastEventsCommand = DateTime.Now;
             ShowEventStatus(player);
+        }
+
+        private bool IsEventsCooldownActive(BasePlayer player)
+        {
+            double elapsed = (DateTime.Now - _lastEventsCommand).TotalSeconds;
+            if (elapsed >= 300) return false;
+
+            int secsLeft = (int)(300 - elapsed) + 1;
+            player.ChatMessage($"<color=#E67E22>[ Rust Custom Event Scheduler ]</color>\n<color=#95A5A6>Command on cooldown. Try again in <color=#F1C40F>{secsLeft}s</color>.</color>");
+            return true;
         }
 
         #endregion

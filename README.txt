@@ -1,6 +1,6 @@
 ================================================================================
   Rust Custom Event Scheduler
-  Version: 0.0.22  |  Author: Ftuoil Xelrash  |  License: GPL v3
+  Version: 0.0.23  |  Author: Ftuoil Xelrash  |  License: GPL v3
   Platform: uMod / Oxide for Rust
 ================================================================================
 
@@ -67,8 +67,8 @@ CONFIGURATION  (oxide/config/rCEventScheduler.json)
     "Admin Discord Webhook URL": "",
     "Max Active Events": 1,
     "Event Buffer Time Enabled": true,
-    "Event Min Buffer Time (minutes)": 15,
-    "Event Max Buffer Time (minutes)": 30,
+    "Event Min Buffer Time (minutes)": 5,
+    "Event Max Buffer Time (minutes)": 15,
     "Enable Player Events Command": true,
     "Events": [
       {
@@ -91,7 +91,7 @@ CONFIGURATION  (oxide/config/rCEventScheduler.json)
         "Event Name": "Arctic Base Event",
         "Event Enabled": true,
         "Required Plugin": "ArcticBaseEvent",
-        "Event Run Time (minutes)": 60,
+        "Event Run Time (minutes)": 45,
         "Event Start Command": "abstart",
         "Event Stop Command": ""
       },
@@ -219,7 +219,7 @@ CONFIGURATION  (oxide/config/rCEventScheduler.json)
         "Event Name": "Gas Station Event",
         "Event Enabled": true,
         "Required Plugin": "GasStationEvent",
-        "Event Run Time (minutes)": 60,
+        "Event Run Time (minutes)": 45,
         "Event Start Command": "gsstart",
         "Event Stop Command": ""
       },
@@ -241,9 +241,9 @@ CONFIGURATION  (oxide/config/rCEventScheduler.json)
       },
       {
         "Event Name": "Sputnik",
-        "Event Enabled": true,
+        "Event Enabled": false,
         "Required Plugin": "Sputnik",
-        "Event Run Time (minutes)": 5,
+        "Event Run Time (minutes)": 60,
         "Event Start Command": "sputnikstart",
         "Event Stop Command": ""
       },
@@ -251,7 +251,7 @@ CONFIGURATION  (oxide/config/rCEventScheduler.json)
         "Event Name": "Supermarket Event",
         "Event Enabled": true,
         "Required Plugin": "SupermarketEvent",
-        "Event Run Time (minutes)": 60,
+        "Event Run Time (minutes)": 45,
         "Event Start Command": "supermarketstart",
         "Event Stop Command": ""
       },
