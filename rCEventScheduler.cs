@@ -7,7 +7,7 @@ using Oxide.Core.Libraries;
 
 namespace Oxide.Plugins
 {
-    [Info("Rust Custom Event Scheduler", "Ftuoil Xelrash", "0.0.23")]
+    [Info("Rust Custom Event Scheduler", "Ftuoil Xelrash", "0.0.26")]
     [Description("Schedules and manages custom Rust server events with randomized queues and Discord notifications.")]
     public class rCEventScheduler : RustPlugin
     {
@@ -290,6 +290,23 @@ namespace Oxide.Plugins
                     return;
                 }
 
+                // Validate required plugins — same check as initial load
+                var valid   = enabled.Where(e => string.IsNullOrEmpty(e.RequiredPlugin) || plugins.Find(e.RequiredPlugin) != null).ToList();
+                var skipped = enabled.Where(e => !string.IsNullOrEmpty(e.RequiredPlugin) && plugins.Find(e.RequiredPlugin) == null).ToList();
+
+                if (valid.Count == 0)
+                {
+                    PrintWarning("[rCEventScheduler] No valid events after plugin validation. Scheduler stopped.");
+                    return;
+                }
+
+                if (skipped.Count > 0)
+                {
+                    string skippedNames = string.Join(", ", skipped.Select(e => $"{e.Name} ({e.RequiredPlugin})"));
+                    Puts($"[rCEventScheduler] New cycle — {skipped.Count} event(s) skipped (plugin not loaded): {skippedNames}");
+                }
+
+                // Staggered: T+0 Cycle Complete → T+2s Queue Randomized → T+4s Next Event Scheduled
                 LogEvent(
                     consoleMsg: "[rCEventScheduler] All events have run. Starting a new cycle.",
                     title:      "Rust Custom Event Scheduler",
@@ -298,17 +315,27 @@ namespace Oxide.Plugins
                     color:      EmbedColors.Purple
                 );
 
-                BuildQueue(enabled);
+                timer.Once(2f, () =>
+                {
+                    BuildQueue(valid);
+                    timer.Once(2f, ScheduleNextEvent);
+                });
+                return;
             }
 
+            ScheduleNextEvent();
+        }
+
+        private void ScheduleNextEvent()
+        {
             _nextEvent = _eventQueue[0];
 
-            int bufferSecs = (_config.BufferTimeEnabled
+            int bufferSecs  = (_config.BufferTimeEnabled
                 ? _rng.Next(_config.MinBufferTime, _config.MaxBufferTime + 1)
                 : 0) * 60;
 
-            int slotSecs   = _activeEvents.Count >= _config.MaxActiveEvents ? SecsUntilSlot() : 0;
-            int totalSecs  = slotSecs + bufferSecs;
+            int slotSecs    = _activeEvents.Count >= _config.MaxActiveEvents ? SecsUntilSlot() : 0;
+            int totalSecs   = slotSecs + bufferSecs;
             int displayMins = totalSecs / 60;
 
             int queuePos  = _cycleTotal - _eventQueue.Count + 1;

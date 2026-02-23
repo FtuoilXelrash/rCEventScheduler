@@ -1,4 +1,4 @@
-![Version](https://img.shields.io/badge/Version-0.0.23-brightgreen) ![Game](https://img.shields.io/badge/Game-Rust-orange) ![Framework](https://img.shields.io/badge/uMod%2FOxide-Oxide-blue) ![License](https://img.shields.io/badge/License-GPL%20v3-lightgrey)
+![Version](https://img.shields.io/badge/Version-0.0.26-brightgreen) ![Game](https://img.shields.io/badge/Game-Rust-orange) ![Framework](https://img.shields.io/badge/uMod%2FOxide-Oxide-blue) ![License](https://img.shields.io/badge/License-GPL%20v3-lightgrey)
 
 # Rust Custom Event Scheduler
 
@@ -46,6 +46,7 @@
   "Event Min Buffer Time (minutes)": 5,
   "Event Max Buffer Time (minutes)": 15,
   "Enable Player Events Command": true,
+  "Show Next Event Scheduled on Event End": true,
   "Events": [
     {
       "Event Name": "Air Event",
@@ -287,8 +288,9 @@
 | Command | Access | Description |
 |---|---|---|
 | `!events` | All Players | Shows active events and the next scheduled event with local time and countdown |
+| `/events` | All Players | Same as `!events` — slash command alias via Oxide command routing |
 
-> **Anti-spam:** The command has a global 5-minute server-side cooldown. Triggers within that window are silently ignored.
+> **Anti-spam:** Both commands share a global 5-minute server-side cooldown. Players who trigger it during cooldown receive a message showing seconds remaining.
 
 **Example output in chat:**
 ```
@@ -311,7 +313,7 @@ When a webhook URL is configured, the plugin sends Discord embed messages for ev
 |---|---|---|
 | Plugin Loaded | 🔵 Blue | Lists all loaded events by name |
 | Queue Randomized | 🟣 Purple | Shows the new randomized event order |
-| Next Event Scheduled | 🩵 Teal | Event name, scheduled time, and countdown |
+| Next Event Scheduled | 🩵 Teal | Event name, scheduled time, countdown, queue position, and events until reshuffle |
 | Event Delayed | 🟠 Orange | Max active events reached — shows new retry time |
 | Event Started | 🟢 Green | Event name, run time, expected end time |
 | Event Ended | 🟠 Orange | Event name and how it ended (self-managed or stopped) |

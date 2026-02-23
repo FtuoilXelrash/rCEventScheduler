@@ -1,6 +1,6 @@
 ================================================================================
   Rust Custom Event Scheduler
-  Version: 0.0.23  |  Author: Ftuoil Xelrash  |  License: GPL v3
+  Version: 0.0.26  |  Author: Ftuoil Xelrash  |  License: GPL v3
   Platform: uMod / Oxide for Rust
 ================================================================================
 
@@ -70,6 +70,7 @@ CONFIGURATION  (oxide/config/rCEventScheduler.json)
     "Event Min Buffer Time (minutes)": 5,
     "Event Max Buffer Time (minutes)": 15,
     "Enable Player Events Command": true,
+    "Show Next Event Scheduled on Event End": true,
     "Events": [
       {
         "Event Name": "Air Event",
@@ -304,10 +305,12 @@ CONFIGURATION  (oxide/config/rCEventScheduler.json)
 PLAYER COMMAND
 --------------------------------------------------------------------------------
 
-  Command : !events  (type in chat)
+  Commands: !events  (type in chat)
+            /events  (slash command — same result, shared cooldown)
   Access  : All players
   Shows   : Active events + next scheduled event with local time + countdown
-  Cooldown: 5 minutes (global, server-wide) — repeated triggers are ignored
+  Cooldown: 5 minutes (global, server-wide) — player receives a message with
+            seconds remaining when command is on cooldown
 
   Example output:
     [ Rust Custom Event Scheduler ]
@@ -326,7 +329,8 @@ DISCORD NOTIFICATIONS
 
   Plugin Loaded       Lists all loaded events
   Queue Randomized    Shows the new randomized event order
-  Next Event          Event name, scheduled time, countdown
+  Next Event          Event name, scheduled time, countdown, queue position,
+                      and events remaining until reshuffle
   Event Delayed       Max active events reached — shows retry time
   Event Started       Event name, run time, expected end time
   Event Ended         Event name and how it ended
