@@ -1,6 +1,6 @@
 ================================================================================
   Rust Custom Event Scheduler
-  Version: 0.0.28  |  Author: Ftuoil Xelrash  |  License: GPL v3
+  Version: 0.0.29  |  Author: Ftuoil Xelrash  |  License: GPL v3
   Platform: uMod / Oxide for Rust
 ================================================================================
 
@@ -31,8 +31,9 @@ FEATURES
     Full console output for every scheduler action with local server time.
 
   - Player Command
-    Players type !events in chat to see active events and next scheduled
-    event with countdown.
+    Players type !events or /events — both are silent (not shown in chat),
+    and the result broadcasts to all players so everyone benefits from the
+    global cooldown.
 
   - Dynamic Config
     Add your own events by editing the config file — no code required.
@@ -305,19 +306,24 @@ CONFIGURATION  (oxide/config/rCEventScheduler.json)
 PLAYER COMMAND
 --------------------------------------------------------------------------------
 
-  Commands: !events  (type in chat)
-            /events  (slash command — same result, shared cooldown)
+  Commands: !events  (type in chat — message is suppressed, not visible)
+            /events  (slash command — suppressed by Oxide, not visible)
   Access  : All players
-  Shows   : Active events + next scheduled event with local time + countdown
-  Cooldown: 5 minutes (global, server-wide) — player receives a message with
-            seconds remaining when command is on cooldown
+  Result  : Broadcast to ALL players on the server (not just the caller)
+  Cooldown: 5 minutes (global, server-wide)
+            Only the player who hits the cooldown sees the cooldown message
+            (private). Other players are not notified.
 
-  Example output:
+  Example output (visible to all players):
     [ My Rust Server Event Scheduler ]
     Active Events:
       - Boss Monster Oni
     Next Event: Convoy
     Starts at: 4:23 PM CST  (~38 min)
+
+  Cooldown message (visible only to the player who triggered it):
+    [ My Rust Server Event Scheduler ]
+    Command on cooldown. Try again in 47s.
 
   Note: The header uses your server name automatically (ConVar.Server.hostname)
 

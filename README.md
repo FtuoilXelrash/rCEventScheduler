@@ -1,4 +1,4 @@
-![Version](https://img.shields.io/badge/Version-0.0.28-brightgreen) ![Game](https://img.shields.io/badge/Game-Rust-orange) ![Framework](https://img.shields.io/badge/uMod%2FOxide-Oxide-blue) ![License](https://img.shields.io/badge/License-GPL%20v3-lightgrey)
+![Version](https://img.shields.io/badge/Version-0.0.29-brightgreen) ![Game](https://img.shields.io/badge/Game-Rust-orange) ![Framework](https://img.shields.io/badge/uMod%2FOxide-Oxide-blue) ![License](https://img.shields.io/badge/License-GPL%20v3-lightgrey)
 
 # Rust Custom Event Scheduler
 
@@ -14,7 +14,7 @@
 - **⚡ Max Active Events** — Control how many events can run simultaneously; prevents event stacking
 - **📢 Discord Notifications** — Rich embed messages for every scheduler action (load, queue, start, end, delay, cycle reset)
 - **🖥️ Console Logging** — Full console output for every scheduler action with local server time
-- **💬 Player Command** — Players type `!events` in chat to see active events and the next scheduled event with countdown
+- **💬 Player Command** — Players type `!events` or `/events` — both are silent (not shown in chat), and the result broadcasts to all players so everyone benefits from the cooldown
 - **🔧 Dynamic Config** — Add your own events by editing the config file — no code, no reload required on first load
 - **🕐 Local Server Time** — All times display in your server's local timezone, auto-detected and abbreviated (e.g. CST, PST, EDT)
 - **🛑 Self-Managed Events** — Events without a stop command (convoys, trains, etc.) are tracked by run time with no stop needed
@@ -287,10 +287,12 @@
 
 | Command | Access | Description |
 |---|---|---|
-| `!events` | All Players | Shows active events and the next scheduled event with local time and countdown |
-| `/events` | All Players | Same as `!events` — slash command alias via Oxide command routing |
+| `!events` | All Players | Silent — suppressed from chat. Broadcasts active events and next scheduled event to all players |
+| `/events` | All Players | Silent — slash commands are suppressed by Oxide. Same result and same shared cooldown as `!events` |
 
-> **Anti-spam:** Both commands share a global 5-minute server-side cooldown. Players who trigger it during cooldown receive a message showing seconds remaining.
+> **Broadcast:** The result is sent to all players on the server, not just the player who typed the command. Since the cooldown is global, everyone benefits from one trigger.
+
+> **Anti-spam:** Both commands share a global 5-minute server-side cooldown. The player who triggers it during cooldown receives a private message showing seconds remaining — other players are not notified.
 
 **Example output in chat:**
 ```

@@ -7,7 +7,7 @@ using Oxide.Core.Libraries;
 
 namespace Oxide.Plugins
 {
-    [Info("Rust Custom Event Scheduler", "Ftuoil Xelrash", "0.0.28")]
+    [Info("Rust Custom Event Scheduler", "Ftuoil Xelrash", "0.0.29")]
     [Description("Schedules and manages custom Rust server events with randomized queues and Discord notifications.")]
     public class rCEventScheduler : RustPlugin
     {
@@ -222,16 +222,17 @@ namespace Oxide.Plugins
             _schedulerTimer?.Destroy();
         }
 
-        private void OnPlayerChat(BasePlayer player, string message, ConVar.Chat.ChatChannel channel)
+        private object OnPlayerChat(BasePlayer player, string message, ConVar.Chat.ChatChannel channel)
         {
-            if (!_config.EnablePlayerCommand) return;
-            if (string.IsNullOrEmpty(message)) return;
-            if (message.Trim().ToLower() != "!events") return;
+            if (!_config.EnablePlayerCommand) return null;
+            if (string.IsNullOrEmpty(message)) return null;
+            if (message.Trim().ToLower() != "!events") return null;
 
-            if (IsEventsCooldownActive(player)) return;
+            if (IsEventsCooldownActive(player)) return true;
 
             _lastEventsCommand = DateTime.Now;
-            ShowEventStatus(player);
+            ShowEventStatus();
+            return true;
         }
 
         [ChatCommand("events")]
@@ -242,7 +243,7 @@ namespace Oxide.Plugins
             if (IsEventsCooldownActive(player)) return;
 
             _lastEventsCommand = DateTime.Now;
-            ShowEventStatus(player);
+            ShowEventStatus();
         }
 
         private bool IsEventsCooldownActive(BasePlayer player)
@@ -488,7 +489,7 @@ namespace Oxide.Plugins
 
         #region Player Command
 
-        private void ShowEventStatus(BasePlayer player)
+        private void ShowEventStatus()
         {
             string tz = GetTzAbbr();
             var sb = new StringBuilder();
@@ -522,7 +523,7 @@ namespace Oxide.Plugins
                 sb.Append("<color=#95A5A6>  Next event: Not yet scheduled.</color>");
             }
 
-            player.ChatMessage(sb.ToString());
+            Server.Broadcast(sb.ToString());
         }
 
         #endregion
