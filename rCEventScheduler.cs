@@ -7,7 +7,7 @@ using Oxide.Core.Libraries;
 
 namespace Oxide.Plugins
 {
-    [Info("Rust Custom Event Scheduler", "Ftuoil Xelrash", "0.0.29")]
+    [Info("Rust Custom Event Scheduler", "Ftuoil Xelrash", "1.0.5")]
     [Description("Schedules and manages custom Rust server events with randomized queues and Discord notifications.")]
     public class rCEventScheduler : RustPlugin
     {
@@ -136,7 +136,7 @@ namespace Oxide.Plugins
             }
             catch (Exception ex)
             {
-                PrintError($"[rCEventScheduler] Config load error: {ex.Message} — Reverting to defaults.");
+                PrintError($"[rCEventScheduler] Config load error: {ex.Message} - Reverting to defaults.");
                 LoadDefaultConfig();
             }
         }
@@ -182,7 +182,7 @@ namespace Oxide.Plugins
             LogEvent(
                 consoleMsg: $"[rCEventScheduler] {valid.Count} event(s) loaded: {names}",
                 title:      $"{ConVar.Server.hostname} Event Scheduler",
-                desc:       $"Plugin loaded — **{valid.Count} event(s)** are ready to schedule.",
+                desc:       $"Plugin loaded - **{valid.Count} event(s)** are ready to schedule.",
                 fields:     new List<EmbedField> { new EmbedField("Loaded Events", eventList, false) },
                 color:      EmbedColors.Blue
             );
@@ -192,13 +192,13 @@ namespace Oxide.Plugins
                 // Skipped events message (one combined message after load)
                 if (skipped.Count > 0)
                 {
-                    string skippedList = string.Join("\n", skipped.Select(e => $"• {e.Name}  —  plugin: {e.RequiredPlugin}"));
+                    string skippedList = string.Join("\n", skipped.Select(e => $"• {e.Name} - plugin: {e.RequiredPlugin}"));
                     string skippedNames = string.Join(", ", skipped.Select(e => e.Name));
 
                     LogEvent(
-                        consoleMsg: $"[rCEventScheduler] {skipped.Count} event(s) skipped — required plugin not loaded: {skippedNames}",
+                        consoleMsg: $"[rCEventScheduler] {skipped.Count} event(s) skipped - required plugin not loaded: {skippedNames}",
                         title:      $"{ConVar.Server.hostname} Event Scheduler",
-                        desc:       $"**Events Skipped — Plugin Not Loaded**\n{skipped.Count} event(s) were omitted from the scheduler.",
+                        desc:       $"**Events Skipped - Plugin Not Loaded**\n{skipped.Count} event(s) were omitted from the scheduler.",
                         fields:     new List<EmbedField> { new EmbedField("Skipped Events", skippedList, false) },
                         color:      EmbedColors.Orange
                     );
@@ -304,7 +304,7 @@ namespace Oxide.Plugins
                 if (skipped.Count > 0)
                 {
                     string skippedNames = string.Join(", ", skipped.Select(e => $"{e.Name} ({e.RequiredPlugin})"));
-                    Puts($"[rCEventScheduler] New cycle — {skipped.Count} event(s) skipped (plugin not loaded): {skippedNames}");
+                    Puts($"[rCEventScheduler] New cycle - {skipped.Count} event(s) skipped (plugin not loaded): {skippedNames}");
                 }
 
                 // Staggered: T+0 Cycle Complete → T+2s Queue Randomized → T+4s Next Event Scheduled
@@ -348,7 +348,7 @@ namespace Oxide.Plugins
             string timeStr = _nextEventTime.ToString("h:mm tt") + " " + tz;
 
             LogEvent(
-                consoleMsg: $"[rCEventScheduler] Next event: {_nextEvent.Name} — scheduled at {timeStr} (in ~{displayMins} min) [{queuePos}/{_cycleTotal}]",
+                consoleMsg: $"[rCEventScheduler] Next event: {_nextEvent.Name} - scheduled at {timeStr} (in ~{displayMins} min) [{queuePos}/{_cycleTotal}]",
                 title:      $"{ConVar.Server.hostname} Event Scheduler",
                 desc:       "**Next Event Scheduled**\nThe next event has been queued.",
                 fields:     new List<EmbedField>
@@ -357,7 +357,7 @@ namespace Oxide.Plugins
                     new EmbedField("Scheduled Time",  timeStr,                                                                                     false),
                     new EmbedField("In",              $"~{displayMins} minutes",                                                                   false),
                     new EmbedField("Queue Position",  $"{queuePos} of {_cycleTotal}",                                                              false),
-                    new EmbedField("Until Reshuffle", afterThis == 0 ? "This is the last event — reshuffle next" : $"{afterThis} event(s) after this one", false)
+                    new EmbedField("Until Reshuffle", afterThis == 0 ? "This is the last event - reshuffle next" : $"{afterThis} event(s) after this one", false)
                 },
                 color: EmbedColors.Teal
             );
@@ -381,7 +381,7 @@ namespace Oxide.Plugins
                 string timeStr = _nextEventTime.ToString("h:mm tt") + " " + tz;
 
                 LogEvent(
-                    consoleMsg: $"[rCEventScheduler] Max active events ({_config.MaxActiveEvents}) reached. {_nextEvent.Name} delayed ~{waitMins} min — retrying at {timeStr}",
+                    consoleMsg: $"[rCEventScheduler] Max active events ({_config.MaxActiveEvents}) reached. {_nextEvent.Name} delayed ~{waitMins} min - retrying at {timeStr}",
                     title:      $"{ConVar.Server.hostname} Event Scheduler",
                     desc:       $"**Event Delayed**\nMax active events reached. **{_nextEvent.Name}** has been delayed.",
                     fields:     new List<EmbedField>
@@ -477,7 +477,7 @@ namespace Oxide.Plugins
                             new EmbedField("Scheduled Time",  timeStr,                                                                                             false),
                             new EmbedField("In",              $"~{displayMins} minutes",                                                                           false),
                             new EmbedField("Queue Position",  $"{queuePos} of {_cycleTotal}",                                                                      false),
-                            new EmbedField("Until Reshuffle", afterThis == 0 ? "This is the last event — reshuffle next" : $"{afterThis} event(s) after this one", false)
+                            new EmbedField("Until Reshuffle", afterThis == 0 ? "This is the last event - reshuffle next" : $"{afterThis} event(s) after this one", false)
                         },
                         EmbedColors.Teal
                     );
