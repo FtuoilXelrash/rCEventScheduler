@@ -1,4 +1,4 @@
-![Version](https://img.shields.io/badge/Version-1.0.5-brightgreen) ![Game](https://img.shields.io/badge/Game-Rust-orange) ![Framework](https://img.shields.io/badge/uMod%2FOxide-Oxide-blue) ![License](https://img.shields.io/badge/License-GPL%20v3-lightgrey)
+![Version](https://img.shields.io/badge/Version-1.0.10-brightgreen) ![Game](https://img.shields.io/badge/Game-Rust-orange) ![Framework](https://img.shields.io/badge/uMod%2FOxide-Oxide-blue) ![License](https://img.shields.io/badge/License-GPL%20v3-lightgrey)
 
 # Rust Custom Event Scheduler
 
@@ -13,6 +13,7 @@
 - **🔁 Auto-Cycling** — When all events have run, the list re-randomizes automatically and starts a new cycle
 - **⚡ Max Active Events** — Control how many events can run simultaneously; prevents event stacking
 - **📢 Discord Notifications** — Rich embed messages for every scheduler action (load, queue, start, end, delay, cycle reset)
+- **📌 Sticky Live-Status Message** — A single, self-updating Discord message (its own webhook) showing active events, the next event, and the full event roster — always up to date, enabled by default
 - **🖥️ Console Logging** — Full console output for every scheduler action with local server time
 - **💬 Player Command** — Players type `!events` or `/events` — both are silent (not shown in chat), and the result broadcasts to all players so everyone benefits from the cooldown
 - **🔧 Dynamic Config** — Add your own events by editing the config file — no code, no reload required on first load
@@ -29,6 +30,7 @@
 3. Restart the server or run: `oxide.reload rCEventScheduler`
 4. Edit the config at `oxide/config/rCEventScheduler.json`
 5. Set your Discord webhook URL for admin notifications (optional)
+6. Set a second Discord webhook URL for the sticky live-status message (optional — see [Sticky Live-Status Message](#-sticky-live-status-message))
 
 ---
 
@@ -47,6 +49,8 @@
   "Event Max Buffer Time (minutes)": 15,
   "Enable Player Events Command": true,
   "Show Next Event Scheduled on Event End": true,
+  "Enable Status Sticky Message": true,
+  "Status Sticky Discord Webhook URL": "",
   "Events": [
     {
       "Event Name": "Air Event",
@@ -265,6 +269,8 @@
 | `Event Max Buffer Time (minutes)` | `15` | Maximum random delay (minutes) before next event fires |
 | `Enable Player Events Command` | `true` | Allow all players to use `!events` in chat |
 | `Show Next Event Scheduled on Event End` | `true` | After an event ends, re-send the Next Event Scheduled Discord embed as a reminder |
+| `Enable Status Sticky Message` | `true` | Enable the self-updating sticky live-status Discord message |
+| `Status Sticky Discord Webhook URL` | `""` | Discord webhook URL for the sticky live-status message — separate from the admin webhook above |
 
 ### Per-Event Options
 
@@ -322,6 +328,34 @@ When a webhook URL is configured, the plugin sends Discord embed messages for ev
 | Event Started | 🟢 Green | Event name, run time, expected end time |
 | Event Ended | 🟠 Orange | Event name and how it ended (self-managed or stopped) |
 | Cycle Complete | 🟣 Purple | All events ran — new randomized cycle starting |
+
+---
+
+## 📌 Sticky Live-Status Message
+
+A single Discord message that updates itself in place — like a live status board — instead of posting a new message every time. Uses its **own webhook URL**, separate from the admin notifications webhook above, so you can post it to a public channel while keeping admin logs private.
+
+**Shown in the message:**
+- **Active Event(s)** — name, expected end time, and minutes remaining (or "No events currently active")
+- **Next Event** — name, scheduled time, countdown, queue position, and events until reshuffle
+- **Event Roster** — every enabled event with its run time, alphabetical (not just the current cycle's order)
+
+All times use your server's local time, same as every other message this plugin sends — no special Discord timestamp formatting.
+
+The message is edited only when something actually changes (an event starts, ends, or the next event gets scheduled/delayed) — there's no background refresh timer. If the message is deleted from Discord, the plugin automatically posts a new one on the next update.
+
+**Setup:**
+1. Create a second Discord webhook in the channel you want the live status to appear
+2. Set `Status Sticky Discord Webhook URL` in the config to that webhook URL
+3. Leave `Enable Status Sticky Message` as `true` (default) — or set it `false` to disable
+
+**Console commands:**
+
+| Command | Description |
+|---|---|
+| `rces.status` | Print current sticky status state to console (enabled, webhook configured, message ID, active/next event) |
+| `rces.forcestatus` | Force an immediate sticky message update |
+| `rces.resetstatus` | Clear the stored Discord message ID — a new message will be created on the next update |
 
 ---
 
