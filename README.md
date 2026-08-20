@@ -1,4 +1,4 @@
-![Version](https://img.shields.io/badge/Version-1.0.11-brightgreen) ![Game](https://img.shields.io/badge/Game-Rust-orange) ![Framework](https://img.shields.io/badge/uMod%2FOxide-Oxide-blue) ![License](https://img.shields.io/badge/License-GPL%20v3-lightgrey)
+![Version](https://img.shields.io/badge/Version-1.0.20-brightgreen) ![Game](https://img.shields.io/badge/Game-Rust-orange) ![Framework](https://img.shields.io/badge/uMod%2FOxide-Oxide-blue) ![License](https://img.shields.io/badge/License-GPL%20v3-lightgrey)
 
 # Rust Custom Event Scheduler
 
@@ -12,8 +12,9 @@
 - **⏱️ Smart Buffer Timing** — Configurable random delay (min/max minutes) between every event keeps spawn timing varied
 - **🔁 Auto-Cycling** — When all events have run, the list re-randomizes automatically and starts a new cycle
 - **⚡ Max Active Events** — Control how many events can run simultaneously; prevents event stacking
-- **📢 Discord Notifications** — Rich embed messages for every scheduler action (load, queue, start, end, delay, cycle reset)
-- **📌 Sticky Live-Status Message** — A single, self-updating Discord message (its own webhook) showing active events, the next event, and the full event roster — always up to date, enabled by default
+- **📢 Discord Notifications** — Rich embed messages for every scheduler action (load, queue, start, end, delay, cycle reset), each individually toggleable
+- **📌 Sticky Live-Status Message** — A single, self-updating Discord message (its own webhook) showing active events, the next event, and the upcoming queue — always up to date, enabled by default
+- **♻️ Retain Schedule Between Restarts** — The event queue and next-event timing survive a plugin reload or server restart instead of always re-randomizing, enabled by default
 - **🖥️ Console Logging** — Full console output for every scheduler action with local server time
 - **💬 Player Command** — Players type `!events` or `/events` — both are silent (not shown in chat), and the result broadcasts to all players so everyone benefits from the cooldown
 - **🔧 Dynamic Config** — Add your own events by editing the config file — no code, no reload required on first load
@@ -43,12 +44,22 @@
   "Log Events to Console": true,
   "Log Events to Discord": true,
   "Admin Discord Webhook URL": "",
+  "Notify Discord: Plugin Loaded": true,
+  "Notify Discord: Events Skipped": true,
+  "Notify Discord: Queue Randomized": true,
+  "Notify Discord: Next Event Scheduled": true,
+  "Notify Discord: Event Delayed": true,
+  "Notify Discord: Event Started": true,
+  "Notify Discord: Event Ended": true,
+  "Notify Discord: Cycle Complete": true,
+  "Notify Discord: Schedule Restored": true,
   "Max Active Events": 1,
   "Event Buffer Time Enabled": true,
   "Event Min Buffer Time (minutes)": 5,
   "Event Max Buffer Time (minutes)": 15,
   "Enable Player Events Command": true,
   "Show Next Event Scheduled on Event End": true,
+  "Retain Schedule Between Restarts": true,
   "Enable Status Sticky Message": true,
   "Status Sticky Discord Webhook URL": "",
   "Status Sticky Discord Bot Name": "Event Scheduler",
@@ -264,15 +275,27 @@
 | `Log Events to Console` | `true` | Print all scheduler events to the server console |
 | `Log Events to Discord` | `true` | Send Discord embed messages for all scheduler events |
 | `Admin Discord Webhook URL` | `""` | Private Discord webhook URL for admin-only notifications |
+| `Notify Discord: Plugin Loaded` | `true` | Send the Plugin Loaded embed |
+| `Notify Discord: Events Skipped` | `true` | Send the Events Skipped (missing plugin) embed |
+| `Notify Discord: Queue Randomized` | `true` | Send the Queue Randomized embed |
+| `Notify Discord: Next Event Scheduled` | `true` | Send the Next Event Scheduled embed (including the post-event reminder) |
+| `Notify Discord: Event Delayed` | `true` | Send the Event Delayed (max active events) embed |
+| `Notify Discord: Event Started` | `true` | Send the Event Started embed |
+| `Notify Discord: Event Ended` | `true` | Send the Event Ended embed |
+| `Notify Discord: Cycle Complete` | `true` | Send the Cycle Complete embed |
+| `Notify Discord: Schedule Restored` | `true` | Send the Schedule Restored embed (see Retain Schedule Between Restarts below) |
 | `Max Active Events` | `1` | Maximum number of events that can run at the same time |
 | `Event Buffer Time Enabled` | `true` | Enable random delay between events |
 | `Event Min Buffer Time (minutes)` | `5` | Minimum random delay (minutes) before next event fires |
 | `Event Max Buffer Time (minutes)` | `15` | Maximum random delay (minutes) before next event fires |
 | `Enable Player Events Command` | `true` | Allow all players to use `!events` in chat |
 | `Show Next Event Scheduled on Event End` | `true` | After an event ends, re-send the Next Event Scheduled Discord embed as a reminder |
+| `Retain Schedule Between Restarts` | `true` | Resume the event queue and next-event timing after a plugin reload or server restart instead of re-randomizing |
 | `Enable Status Sticky Message` | `true` | Enable the self-updating sticky live-status Discord message |
 | `Status Sticky Discord Webhook URL` | `""` | Discord webhook URL for the sticky live-status message — separate from the admin webhook above |
 | `Status Sticky Discord Bot Name` | `"Event Scheduler"` | Discord display name sent with the sticky message, overriding whatever the raw webhook is named in Discord's own settings |
+
+> **Note:** All 9 `Notify Discord: *` options only control Discord embeds and are layered on top of the master `Log Events to Discord` switch (both must be true for that message to post). Console logging (`Log Events to Console`) is unaffected and stays as a single switch for all console output.
 
 ### Per-Event Options
 
@@ -330,6 +353,9 @@ When a webhook URL is configured, the plugin sends Discord embed messages for ev
 | Event Started | 🟢 Green | Event name, run time, expected end time |
 | Event Ended | 🟠 Orange | Event name and how it ended (self-managed or stopped) |
 | Cycle Complete | 🟣 Purple | All events ran — new randomized cycle starting |
+| Schedule Restored | 🔵 Blue | Sent on load when `Retain Schedule Between Restarts` successfully resumes a saved queue |
+
+> Each row above has its own `Notify Discord: *` config toggle — see the Global Settings table.
 
 ---
 
@@ -338,7 +364,7 @@ When a webhook URL is configured, the plugin sends Discord embed messages for ev
 A single Discord message that updates itself in place — like a live status board — instead of posting a new message every time. Uses its **own webhook URL**, separate from the admin notifications webhook above, so you can post it to a public channel while keeping admin logs private.
 
 **Shown in the message:**
-- **Active Event(s)** — name, expected end time, and minutes remaining (or "No events currently active")
+- **Active Event(s)** — name, expected end time, and minutes remaining. If nothing is currently active but an event ended recently, this shows `"{Event} is finishing up (ended {time})"` instead of the bare "No events currently active" — useful if your real event durations sometimes run shorter than the configured `Event Run Time`. Only shows the plain "No events currently active" message on a fresh load before anything has run yet.
 - **Next Event** — name, scheduled time, countdown, queue position, and events until reshuffle
 - **Upcoming Queue** — every event remaining in the current cycle's randomized queue, in the order it will fire, each with a projected local kickoff time. The first entry is exact; every entry after that is labeled `(est.)` since real per-event delay is only randomized once that event actually becomes next. Events already fired this cycle drop off the list until the next reshuffle.
 
@@ -360,6 +386,24 @@ The message is edited only when something actually changes (an event starts, end
 | `rces.status` | Print current sticky status state to console (enabled, webhook configured, message ID, active/next event) |
 | `rces.forcestatus` | Force an immediate sticky message update |
 | `rces.resetstatus` | Clear the stored Discord message ID — a new message will be created on the next update |
+
+---
+
+## ♻️ Retain Schedule Between Restarts
+
+By default, the event queue and next-event timing survive a plugin reload or server restart instead of always re-randomizing on load.
+
+**What's restored:** the remaining event queue for this cycle (in order), the cycle total, and the next event's exact scheduled time.
+
+**What's re-validated:** every restored event is checked against `Required Plugin` again, exactly like a fresh load — if an event's plugin is no longer loaded (or the event was disabled/removed from config since the restart), it's dropped from the restored queue and logged as a "Schedule Restored" message listing what was dropped.
+
+**Restart downtime is handled automatically.** The saved "next event" time is an absolute clock time, not "X minutes from now" — so if the server was down for 10 minutes and that time already passed, the restored event fires immediately on the next load instead of needing any special catch-up math.
+
+**What's never restored as active:** any event still marked active at the moment of shutdown is **not** treated as still running after a restart — there's no reliable way to confirm the actual in-game entity (a boss, convoy, etc.) survived a real server restart, since most custom event plugins don't guarantee that. So active-event tracking simply starts empty, same as any fresh load, and `Max Active Events` is immediately available again.
+
+**Note:** this can't distinguish a real server restart from `oxide.reload rCEventScheduler` — both trigger the same restore behavior.
+
+Disable with `"Retain Schedule Between Restarts": false` to always start every load with a fresh randomized queue (the original behavior).
 
 ---
 
