@@ -8,7 +8,7 @@ using Oxide.Core.Libraries;
 
 namespace Oxide.Plugins
 {
-    [Info("Rust Custom Event Scheduler", "Ftuoil Xelrash", "1.0.11")]
+    [Info("Rust Custom Event Scheduler", "Ftuoil Xelrash", "1.0.21")]
     [Description("Schedules and manages custom Rust server events with randomized queues and Discord notifications.")]
     public class rCEventScheduler : RustPlugin
     {
@@ -25,6 +25,8 @@ namespace Oxide.Plugins
         private readonly System.Random _rng = new System.Random();
         private DateTime _lastEventsCommand = DateTime.MinValue;
         private int _cycleTotal;
+        private string _lastEndedEventName;
+        private DateTime _lastEndedEventTime = DateTime.MinValue;
 
         private readonly Dictionary<string, string> _headers = new Dictionary<string, string>
         {
@@ -46,6 +48,33 @@ namespace Oxide.Plugins
             [JsonProperty("Admin Discord Webhook URL")]
             public string WebhookUrl = "";
 
+            [JsonProperty("Notify Discord: Plugin Loaded")]
+            public bool NotifyPluginLoaded = true;
+
+            [JsonProperty("Notify Discord: Events Skipped")]
+            public bool NotifyEventsSkipped = true;
+
+            [JsonProperty("Notify Discord: Queue Randomized")]
+            public bool NotifyQueueRandomized = true;
+
+            [JsonProperty("Notify Discord: Next Event Scheduled")]
+            public bool NotifyNextEventScheduled = true;
+
+            [JsonProperty("Notify Discord: Event Delayed")]
+            public bool NotifyEventDelayed = true;
+
+            [JsonProperty("Notify Discord: Event Started")]
+            public bool NotifyEventStarted = true;
+
+            [JsonProperty("Notify Discord: Event Ended")]
+            public bool NotifyEventEnded = true;
+
+            [JsonProperty("Notify Discord: Cycle Complete")]
+            public bool NotifyCycleComplete = true;
+
+            [JsonProperty("Notify Discord: Schedule Restored")]
+            public bool NotifyScheduleRestored = true;
+
             [JsonProperty("Max Active Events")]
             public int MaxActiveEvents = 1;
 
@@ -64,6 +93,9 @@ namespace Oxide.Plugins
             [JsonProperty("Show Next Event Scheduled on Event End")]
             public bool ShowNextEventOnEnd = true;
 
+            [JsonProperty("Retain Schedule Between Restarts")]
+            public bool RetainScheduleBetweenRestarts = true;
+
             [JsonProperty("Enable Status Sticky Message")]
             public bool EnableStickyStatus = true;
 
@@ -81,6 +113,24 @@ namespace Oxide.Plugins
         {
             [JsonProperty("Status Sticky Message ID")]
             public string StatusMessageId = null;
+
+            [JsonProperty("Retained Queue Event Names")]
+            public List<string> QueueEventNames = new List<string>();
+
+            [JsonProperty("Retained Cycle Total")]
+            public int CycleTotal = 0;
+
+            [JsonProperty("Retained Next Event Time")]
+            public DateTime? NextEventTime = null;
+
+            [JsonProperty("Retained Last Ended Event Name")]
+            public string LastEndedEventName = null;
+
+            [JsonProperty("Retained Last Ended Event Time")]
+            public DateTime? LastEndedEventTime = null;
+
+            [JsonProperty("Retained Schedule Saved At")]
+            public DateTime? SavedAt = null;
         }
 
         private class EventEntry
@@ -191,6 +241,22 @@ namespace Oxide.Plugins
             }
         }
 
+        // Snapshots the current queue/next-event state to the data file so it can survive a
+        // reload or restart. No-op if the feature is disabled in config.
+        private void PersistScheduleState()
+        {
+            if (!_config.RetainScheduleBetweenRestarts) return;
+
+            _data.QueueEventNames    = _eventQueue.Select(e => e.Name).ToList();
+            _data.CycleTotal         = _cycleTotal;
+            _data.NextEventTime      = _nextEventTime > DateTime.MinValue ? (DateTime?)_nextEventTime : null;
+            _data.LastEndedEventName = _lastEndedEventName;
+            _data.LastEndedEventTime = _lastEndedEventTime > DateTime.MinValue ? (DateTime?)_lastEndedEventTime : null;
+            _data.SavedAt            = DateTime.Now;
+
+            SaveData();
+        }
+
         #endregion
 
         #region Oxide Hooks
@@ -237,7 +303,8 @@ namespace Oxide.Plugins
                 title:      $"{ConVar.Server.hostname} Event Scheduler",
                 desc:       $"Plugin loaded - **{valid.Count} event(s)** are ready to schedule.",
                 fields:     new List<EmbedField> { new EmbedField("Loaded Events", eventList, false) },
-                color:      EmbedColors.Blue
+                color:      EmbedColors.Blue,
+                discordEnabled: _config.NotifyPluginLoaded
             );
 
             timer.Once(2f, () =>
@@ -253,19 +320,26 @@ namespace Oxide.Plugins
                         title:      $"{ConVar.Server.hostname} Event Scheduler",
                         desc:       $"**Events Skipped - Plugin Not Loaded**\n{skipped.Count} event(s) were omitted from the scheduler.",
                         fields:     new List<EmbedField> { new EmbedField("Skipped Events", skippedList, false) },
-                        color:      EmbedColors.Orange
+                        color:      EmbedColors.Orange,
+                        discordEnabled: _config.NotifyEventsSkipped
                     );
 
                     timer.Once(2f, () =>
                     {
-                        BuildQueue(valid);
-                        timer.Once(2f, ScheduleNext);
+                        if (!TryRestoreSchedule(valid))
+                        {
+                            BuildQueue(valid);
+                            timer.Once(2f, ScheduleNext);
+                        }
                     });
                 }
                 else
                 {
-                    BuildQueue(valid);
-                    timer.Once(2f, ScheduleNext);
+                    if (!TryRestoreSchedule(valid))
+                    {
+                        BuildQueue(valid);
+                        timer.Once(2f, ScheduleNext);
+                    }
                 }
             });
         }
@@ -329,8 +403,87 @@ namespace Oxide.Plugins
                 title:      $"{ConVar.Server.hostname} Event Scheduler",
                 desc:       $"A new randomized event queue has been built.\n**{_eventQueue.Count} event(s)** in this cycle.",
                 fields:     new List<EmbedField> { new EmbedField("Queue Order", numberedList, false) },
-                color:      EmbedColors.Purple
+                color:      EmbedColors.Purple,
+                discordEnabled: _config.NotifyQueueRandomized
             );
+        }
+
+        // Attempts to resume the queue/next-event schedule saved by a previous session instead of
+        // building a fresh randomized queue. Returns false (caller should fall back to BuildQueue)
+        // if the feature is disabled, nothing was saved, or nothing in the saved queue is still valid.
+        // Events still marked active at the moment of shutdown are never restored as active - we can't
+        // confirm the underlying game entity survived a real restart, so that tracking is simply left
+        // empty (as it always is on a fresh load) and MaxActiveEvents is immediately available again.
+        private bool TryRestoreSchedule(List<EventEntry> valid)
+        {
+            if (!_config.RetainScheduleBetweenRestarts) return false;
+            if (_data.QueueEventNames == null || _data.QueueEventNames.Count == 0) return false;
+
+            var restoredQueue = new List<EventEntry>();
+            var dropped       = new List<string>();
+
+            foreach (string name in _data.QueueEventNames)
+            {
+                var match = valid.FirstOrDefault(e => e.Name == name);
+                if (match != null)
+                    restoredQueue.Add(match);
+                else
+                    dropped.Add(name);
+            }
+
+            if (restoredQueue.Count == 0) return false;
+
+            _eventQueue         = restoredQueue;
+            _cycleTotal         = Math.Max(_data.CycleTotal, restoredQueue.Count);
+            _lastEndedEventName = _data.LastEndedEventName;
+            _lastEndedEventTime = _data.LastEndedEventTime ?? DateTime.MinValue;
+
+            bool firstEventDropped = dropped.Contains(_data.QueueEventNames[0]);
+
+            string restoredList = string.Join("\n", restoredQueue.Select((e, i) => $"{i + 1}. {e.Name}"));
+            string droppedNote  = dropped.Count > 0
+                ? $"\n{dropped.Count} event(s) dropped - no longer valid (disabled or missing plugin): {string.Join(", ", dropped)}"
+                : "";
+
+            LogEvent(
+                consoleMsg:     $"[rCEventScheduler] Schedule restored from previous session - {restoredQueue.Count} event(s) in queue." + (dropped.Count > 0 ? $" {dropped.Count} dropped: {string.Join(", ", dropped)}" : ""),
+                title:          $"{ConVar.Server.hostname} Event Scheduler",
+                desc:           $"**Schedule Restored**\nContinuing the event queue from before the restart.{droppedNote}",
+                fields:         new List<EmbedField> { new EmbedField("Restored Queue", restoredList, false) },
+                color:          EmbedColors.Blue,
+                discordEnabled: _config.NotifyScheduleRestored
+            );
+
+            if (!firstEventDropped && _data.NextEventTime.HasValue)
+            {
+                _nextEvent     = _eventQueue[0];
+                _nextEventTime = _data.NextEventTime.Value;
+
+                double remainingSecs = (_nextEventTime - DateTime.Now).TotalSeconds;
+                string tz            = GetTzAbbr();
+
+                _schedulerTimer?.Destroy();
+
+                if (remainingSecs <= 0)
+                {
+                    Puts($"[rCEventScheduler] Restored next event ({_nextEvent.Name}) was already due during downtime - firing now.");
+                    _schedulerTimer = timer.Once(2f, TryFire);
+                }
+                else
+                {
+                    Puts($"[rCEventScheduler] Restored schedule - next event: {_nextEvent.Name} at {_nextEventTime:h:mm tt} {tz} (in ~{(int)(remainingSecs / 60)} min)");
+                    _schedulerTimer = timer.Once((float)remainingSecs, TryFire);
+                }
+
+                UpdateStickyStatus();
+                PersistScheduleState();
+            }
+            else
+            {
+                timer.Once(2f, ScheduleNextEvent);
+            }
+
+            return true;
         }
 
         private void ScheduleNext()
@@ -367,7 +520,8 @@ namespace Oxide.Plugins
                     title:      $"{ConVar.Server.hostname} Event Scheduler",
                     desc:       "**Cycle Complete**\nAll events in the cycle have run. A fresh randomized cycle is starting.",
                     fields:     null,
-                    color:      EmbedColors.Purple
+                    color:      EmbedColors.Purple,
+                    discordEnabled: _config.NotifyCycleComplete
                 );
 
                 timer.Once(2f, () =>
@@ -413,10 +567,12 @@ namespace Oxide.Plugins
                     new EmbedField("Queue Position",  $"{queuePos} of {_cycleTotal}",                                                              false),
                     new EmbedField("Until Reshuffle", afterThis == 0 ? "This is the last event - reshuffle next" : $"{afterThis} event(s) after this one", false)
                 },
-                color: EmbedColors.Teal
+                color: EmbedColors.Teal,
+                discordEnabled: _config.NotifyNextEventScheduled
             );
 
             UpdateStickyStatus();
+            PersistScheduleState();
 
             _schedulerTimer?.Destroy();
             _schedulerTimer = timer.Once(totalSecs, TryFire);
@@ -447,10 +603,12 @@ namespace Oxide.Plugins
                         new EmbedField("In",            $"~{waitMins} minutes",                                   false),
                         new EmbedField("Reason",        $"Max active events ({_config.MaxActiveEvents}) reached", false)
                     },
-                    color: EmbedColors.Orange
+                    color: EmbedColors.Orange,
+                    discordEnabled: _config.NotifyEventDelayed
                 );
 
                 UpdateStickyStatus();
+                PersistScheduleState();
 
                 _schedulerTimer?.Destroy();
                 _schedulerTimer = timer.Once(waitSecs, TryFire);
@@ -484,10 +642,12 @@ namespace Oxide.Plugins
                     new EmbedField("Expected End", endTime,                 false),
                     new EmbedField("Stop Method",  stopMethod,              false)
                 },
-                color: EmbedColors.Green
+                color: EmbedColors.Green,
+                discordEnabled: _config.NotifyEventStarted
             );
 
             UpdateStickyStatus();
+            PersistScheduleState();
 
             timer.Once(evt.RunTime * 60f, () => EndEvent(evt));
         }
@@ -499,6 +659,9 @@ namespace Oxide.Plugins
 
             _activeEvents.Remove(evt.Name);
             _activeEventEndTimes.Remove(evt.Name);
+
+            _lastEndedEventName = evt.Name;
+            _lastEndedEventTime = DateTime.Now;
 
             string status = string.IsNullOrEmpty(evt.StopCommand)
                 ? "Ended (self-managed)"
@@ -513,12 +676,14 @@ namespace Oxide.Plugins
                     new EmbedField("Event",  evt.Name, false),
                     new EmbedField("Status", status,   false)
                 },
-                color: EmbedColors.Orange
+                color: EmbedColors.Orange,
+                discordEnabled: _config.NotifyEventEnded
             );
 
             UpdateStickyStatus();
+            PersistScheduleState();
 
-            if (_config.ShowNextEventOnEnd && _config.LogToDiscord && !string.IsNullOrEmpty(_config.WebhookUrl)
+            if (_config.ShowNextEventOnEnd && _config.NotifyNextEventScheduled && _config.LogToDiscord && !string.IsNullOrEmpty(_config.WebhookUrl)
                 && _nextEvent != null && _nextEventTime > DateTime.Now)
             {
                 timer.Once(2f, () =>
@@ -611,12 +776,12 @@ namespace Oxide.Plugins
             public EmbedField(string n, string v, bool i) { Name = n; Value = v; Inline = i; }
         }
 
-        private void LogEvent(string consoleMsg, string title, string desc, List<EmbedField> fields, int color)
+        private void LogEvent(string consoleMsg, string title, string desc, List<EmbedField> fields, int color, bool discordEnabled)
         {
             if (_config.LogToConsole)
                 Puts(consoleMsg);
 
-            if (_config.LogToDiscord && !string.IsNullOrEmpty(_config.WebhookUrl))
+            if (discordEnabled && _config.LogToDiscord && !string.IsNullOrEmpty(_config.WebhookUrl))
                 SendEmbed(title, desc, fields, color);
         }
 
@@ -737,6 +902,11 @@ namespace Oxide.Plugins
                     activeLines.Add(line);
                 }
                 fields.Add(new EmbedField("Active Event(s)", string.Join("\n", activeLines), false));
+            }
+            else if (!string.IsNullOrEmpty(_lastEndedEventName))
+            {
+                string endStr = _lastEndedEventTime.ToString("h:mm tt") + " " + tz;
+                fields.Add(new EmbedField("Active Event(s)", $"{_lastEndedEventName} is finishing up (ended {endStr})", false));
             }
             else
             {
@@ -922,6 +1092,43 @@ namespace Oxide.Plugins
                     PrintError($"[rCEventScheduler] Error parsing sticky status message response: {ex.Message}");
                 }
             }, this, RequestMethod.POST, _headers);
+        }
+
+        #endregion
+
+        #region Scheduler Console Commands
+
+        [ConsoleCommand("rces.resetqueue")]
+        private void CmdResetQueue(ConsoleSystem.Arg arg)
+        {
+            var enabled = _config.Events.Where(e => e.Enabled).ToList();
+            if (enabled.Count == 0)
+            {
+                Puts("[rCEventScheduler] No enabled events found in config. Cannot reset queue.");
+                return;
+            }
+
+            var valid   = enabled.Where(e => string.IsNullOrEmpty(e.RequiredPlugin) || plugins.Find(e.RequiredPlugin) != null).ToList();
+            var skipped = enabled.Where(e => !string.IsNullOrEmpty(e.RequiredPlugin) && plugins.Find(e.RequiredPlugin) == null).ToList();
+
+            if (valid.Count == 0)
+            {
+                Puts("[rCEventScheduler] No valid events after plugin validation. Cannot reset queue.");
+                return;
+            }
+
+            if (skipped.Count > 0)
+            {
+                string skippedNames = string.Join(", ", skipped.Select(e => $"{e.Name} ({e.RequiredPlugin})"));
+                Puts($"[rCEventScheduler] {skipped.Count} event(s) skipped (plugin not loaded): {skippedNames}");
+            }
+
+            _schedulerTimer?.Destroy();
+
+            BuildQueue(valid);
+            ScheduleNextEvent();
+
+            Puts("[rCEventScheduler] Queue manually reset - new randomized order built via console command.");
         }
 
         #endregion
