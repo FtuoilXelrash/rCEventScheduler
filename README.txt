@@ -1,6 +1,6 @@
 ================================================================================
   Rust Custom Event Scheduler
-  Version: 1.0.5  |  Author: Ftuoil Xelrash  |  License: GPL v3
+  Version: 1.0.11  |  Author: Ftuoil Xelrash  |  License: GPL v3
   Platform: uMod / Oxide for Rust
 ================================================================================
 
@@ -26,6 +26,11 @@ FEATURES
   - Discord Notifications
     Rich embed messages for every scheduler action (load, queue, start,
     end, delay, cycle reset).
+
+  - Sticky Live-Status Message
+    A single self-updating Discord message (its own webhook) showing
+    active events, the next event, and the full event roster. Enabled
+    by default.
 
   - Console Logging
     Full console output for every scheduler action with local server time.
@@ -57,6 +62,8 @@ INSTALLATION
   3. Restart the server or run: oxide.reload rCEventScheduler
   4. Edit the config at oxide/config/rCEventScheduler.json
   5. Set your Discord webhook URL for admin notifications (optional)
+  6. Set a second Discord webhook URL for the sticky live-status message
+     (optional — see STICKY LIVE-STATUS MESSAGE section below)
 
 --------------------------------------------------------------------------------
 CONFIGURATION  (oxide/config/rCEventScheduler.json)
@@ -72,6 +79,9 @@ CONFIGURATION  (oxide/config/rCEventScheduler.json)
     "Event Max Buffer Time (minutes)": 15,
     "Enable Player Events Command": true,
     "Show Next Event Scheduled on Event End": true,
+    "Enable Status Sticky Message": true,
+    "Status Sticky Discord Webhook URL": "",
+    "Status Sticky Discord Bot Name": "Event Scheduler",
     "Events": [
       {
         "Event Name": "Air Event",
@@ -288,6 +298,13 @@ CONFIGURATION  (oxide/config/rCEventScheduler.json)
   Enable Player Events Command   Allow players to use !events in chat
   Show Next Event Scheduled      After an event ends, re-send the Next Event
   on Event End                   Scheduled Discord embed as a reminder (true)
+  Enable Status Sticky Message   Enable the self-updating sticky live-status
+                                 Discord message (default: true)
+  Status Sticky Discord          Webhook URL for the sticky live-status
+  Webhook URL                    message — separate from the admin webhook
+  Status Sticky Discord          Discord display name sent with the sticky
+  Bot Name                       message (default: "Event Scheduler") —
+                                 overrides the raw webhook's configured name
 
   PER-EVENT OPTIONS
   -----------------
@@ -345,6 +362,56 @@ DISCORD NOTIFICATIONS
   Event Started       Event name, run time, expected end time
   Event Ended         Event name and how it ended
   Cycle Complete      All events ran — new cycle starting
+
+--------------------------------------------------------------------------------
+STICKY LIVE-STATUS MESSAGE
+--------------------------------------------------------------------------------
+
+  A single Discord message that updates itself in place — like a live status
+  board — instead of posting a new message every time. Uses its OWN webhook
+  URL, separate from the admin notifications webhook above, so you can post
+  it to a public channel while keeping admin logs private.
+
+  Shown in the message:
+    Active Event(s)   Name, expected end time, and minutes remaining
+                       (or "No events currently active")
+    Next Event         Name, scheduled time, countdown, queue position,
+                       and events until reshuffle
+    Upcoming Queue     Every event remaining in the current cycle's
+                       randomized queue, in firing order, each with a
+                       projected local kickoff time. First entry is exact;
+                       later entries are marked (est.) since real per-event
+                       delay is only randomized once that event actually
+                       becomes next. Events already fired this cycle drop
+                       off the list until the next reshuffle.
+
+  All times use your server's local time, same as every other message this
+  plugin sends — no special Discord timestamp formatting.
+
+  The message's Discord display name is set by "Status Sticky Discord Bot
+  Name" (default "Event Scheduler") — this overrides whatever your raw
+  webhook happens to be named in Discord's own settings.
+
+  The message is edited only when something actually changes (an event
+  starts, ends, or the next event gets scheduled/delayed) — there is no
+  background refresh timer. If the message is deleted from Discord, the
+  plugin automatically posts a new one on the next update.
+
+  Setup:
+    1. Create a second Discord webhook in the channel you want the live
+       status to appear
+    2. Set "Status Sticky Discord Webhook URL" in the config to that
+       webhook URL
+    3. Leave "Enable Status Sticky Message" as true (default), or set it
+       false to disable
+
+  Console commands:
+    rces.status         Print current sticky status state to console
+                         (enabled, webhook configured, message ID,
+                         active/next event)
+    rces.forcestatus     Force an immediate sticky message update
+    rces.resetstatus     Clear the stored Discord message ID — a new
+                         message will be created on the next update
 
 --------------------------------------------------------------------------------
 HOW IT WORKS
