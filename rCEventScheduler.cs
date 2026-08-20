@@ -3,17 +3,19 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using Newtonsoft.Json;
+using Oxide.Core;
 using Oxide.Core.Libraries;
 
 namespace Oxide.Plugins
 {
-    [Info("Rust Custom Event Scheduler", "Ftuoil Xelrash", "1.0.5")]
+    [Info("Rust Custom Event Scheduler", "Ftuoil Xelrash", "1.0.11")]
     [Description("Schedules and manages custom Rust server events with randomized queues and Discord notifications.")]
     public class rCEventScheduler : RustPlugin
     {
         #region Fields
 
         private PluginConfig _config;
+        private PluginData _data = new PluginData();
         private List<EventEntry> _eventQueue = new List<EventEntry>();
         private readonly List<string> _activeEvents = new List<string>();
         private readonly Dictionary<string, DateTime> _activeEventEndTimes = new Dictionary<string, DateTime>();
@@ -62,8 +64,23 @@ namespace Oxide.Plugins
             [JsonProperty("Show Next Event Scheduled on Event End")]
             public bool ShowNextEventOnEnd = true;
 
+            [JsonProperty("Enable Status Sticky Message")]
+            public bool EnableStickyStatus = true;
+
+            [JsonProperty("Status Sticky Discord Webhook URL")]
+            public string StickyWebhookUrl = "";
+
+            [JsonProperty("Status Sticky Discord Bot Name")]
+            public string StickyBotName = "Event Scheduler";
+
             [JsonProperty("Events")]
             public List<EventEntry> Events = new List<EventEntry>();
+        }
+
+        private class PluginData
+        {
+            [JsonProperty("Status Sticky Message ID")]
+            public string StatusMessageId = null;
         }
 
         private class EventEntry
@@ -145,7 +162,43 @@ namespace Oxide.Plugins
 
         #endregion
 
+        #region Data
+
+        private void LoadData()
+        {
+            try
+            {
+                _data = Interface.Oxide.DataFileSystem.ReadObject<PluginData>("rCEventScheduler/rCEventScheduler_data");
+                if (_data == null)
+                    _data = new PluginData();
+            }
+            catch (Exception ex)
+            {
+                PrintError($"[rCEventScheduler] Error loading data file: {ex.Message}");
+                _data = new PluginData();
+            }
+        }
+
+        private void SaveData()
+        {
+            try
+            {
+                Interface.Oxide.DataFileSystem.WriteObject("rCEventScheduler/rCEventScheduler_data", _data);
+            }
+            catch (Exception ex)
+            {
+                PrintError($"[rCEventScheduler] Error saving data file: {ex.Message}");
+            }
+        }
+
+        #endregion
+
         #region Oxide Hooks
+
+        private void Init()
+        {
+            LoadData();
+        }
 
         private void OnServerInitialized()
         {
@@ -220,6 +273,7 @@ namespace Oxide.Plugins
         private void Unload()
         {
             _schedulerTimer?.Destroy();
+            SaveData();
         }
 
         private object OnPlayerChat(BasePlayer player, string message, ConVar.Chat.ChatChannel channel)
@@ -362,6 +416,8 @@ namespace Oxide.Plugins
                 color: EmbedColors.Teal
             );
 
+            UpdateStickyStatus();
+
             _schedulerTimer?.Destroy();
             _schedulerTimer = timer.Once(totalSecs, TryFire);
         }
@@ -393,6 +449,8 @@ namespace Oxide.Plugins
                     },
                     color: EmbedColors.Orange
                 );
+
+                UpdateStickyStatus();
 
                 _schedulerTimer?.Destroy();
                 _schedulerTimer = timer.Once(waitSecs, TryFire);
@@ -429,6 +487,8 @@ namespace Oxide.Plugins
                 color: EmbedColors.Green
             );
 
+            UpdateStickyStatus();
+
             timer.Once(evt.RunTime * 60f, () => EndEvent(evt));
         }
 
@@ -455,6 +515,8 @@ namespace Oxide.Plugins
                 },
                 color: EmbedColors.Orange
             );
+
+            UpdateStickyStatus();
 
             if (_config.ShowNextEventOnEnd && _config.LogToDiscord && !string.IsNullOrEmpty(_config.WebhookUrl)
                 && _nextEvent != null && _nextEventTime > DateTime.Now)
@@ -537,6 +599,7 @@ namespace Oxide.Plugins
             public const int Orange = 15105570;  // #E67E22 — event ended / delayed
             public const int Purple = 10181046;  // #9B59B6 — queue randomized / cycle complete
             public const int Teal   = 1752220;   // #1ABC9C — next event scheduled
+            public const int Gold   = 16776960;  // #FFFF00 — live sticky status
         }
 
         private class EmbedField
@@ -582,10 +645,14 @@ namespace Oxide.Plugins
 
         public class DiscordMessage
         {
+            [JsonProperty("username", NullValueHandling = NullValueHandling.Ignore)]
+            public string Username { get; set; }
+
             [JsonProperty("embeds")]
             private List<DiscordEmbed> Embeds { get; set; } = new List<DiscordEmbed>();
 
             public DiscordMessage AddEmbed(DiscordEmbed embed) { Embeds.Add(embed); return this; }
+            public DiscordMessage SetUsername(string username) { Username = username; return this; }
 
             public string ToJson() => JsonConvert.SerializeObject(this, Formatting.None,
                 new JsonSerializerSettings { NullValueHandling = NullValueHandling.Ignore });
@@ -641,6 +708,262 @@ namespace Oxide.Plugins
         {
             [JsonProperty("text")]
             public string Text { get; set; }
+        }
+
+        #endregion
+
+        #region Sticky Status (Discord)
+
+        private void UpdateStickyStatus()
+        {
+            if (!_config.EnableStickyStatus) return;
+            if (string.IsNullOrEmpty(_config.StickyWebhookUrl)) return;
+
+            string tz = GetTzAbbr();
+            var fields = new List<EmbedField>();
+
+            if (_activeEvents.Count > 0)
+            {
+                var activeLines = new List<string>();
+                foreach (string name in _activeEvents)
+                {
+                    string line = $"• {name}";
+                    if (_activeEventEndTimes.TryGetValue(name, out DateTime endTime))
+                    {
+                        string endStr   = endTime.ToString("h:mm tt") + " " + tz;
+                        int    minsLeft = Math.Max(0, (int)(endTime - DateTime.Now).TotalMinutes);
+                        line += $" - ends {endStr} (~{minsLeft} min left)";
+                    }
+                    activeLines.Add(line);
+                }
+                fields.Add(new EmbedField("Active Event(s)", string.Join("\n", activeLines), false));
+            }
+            else
+            {
+                fields.Add(new EmbedField("Active Event(s)", "No events currently active.", false));
+            }
+
+            if (_nextEvent != null && _nextEventTime > DateTime.Now)
+            {
+                int queuePos  = _cycleTotal - _eventQueue.Count + 1;
+                int afterThis = _eventQueue.Count - 1;
+
+                string timeStr     = _nextEventTime.ToString("h:mm tt") + " " + tz;
+                int    displayMins = Math.Max(0, (int)(_nextEventTime - DateTime.Now).TotalMinutes);
+
+                fields.Add(new EmbedField("Next Event",       _nextEvent.Name,                                                                             false));
+                fields.Add(new EmbedField("Scheduled Time",   $"{timeStr} (~{displayMins} min)",                                                           false));
+                fields.Add(new EmbedField("Queue Position",   $"{queuePos} of {_cycleTotal}",                                                              false));
+                fields.Add(new EmbedField("Until Reshuffle",  afterThis == 0 ? "This is the last event - reshuffle next" : $"{afterThis} event(s) after this one", false));
+            }
+            else
+            {
+                fields.Add(new EmbedField("Next Event", "Not yet scheduled.", false));
+            }
+
+            var queueLines = new List<string>();
+            int qn = 1;
+            foreach (var proj in ProjectQueueTimes())
+            {
+                string timeStr = proj.Time.ToString("h:mm tt") + " " + tz;
+                queueLines.Add($"{qn}. {proj.Event.Name} - {timeStr}{(proj.Exact ? "" : " (est.)")}");
+                qn++;
+            }
+
+            if (queueLines.Count == 0)
+            {
+                fields.Add(new EmbedField("Upcoming Queue", "Not yet scheduled.", false));
+            }
+            else
+            {
+                var chunks = ChunkLines(queueLines, 1000);
+                if (chunks.Count == 1)
+                {
+                    fields.Add(new EmbedField("Upcoming Queue", chunks[0], false));
+                }
+                else
+                {
+                    for (int i = 0; i < chunks.Count; i++)
+                        fields.Add(new EmbedField($"Upcoming Queue ({i + 1}/{chunks.Count})", chunks[i], false));
+                }
+            }
+
+            SendOrEditStickyMessage(
+                $"{ConVar.Server.hostname} Event Scheduler",
+                "**Live Event Status**\nThis message updates automatically as events start, end, and get scheduled.",
+                fields,
+                EmbedColors.Gold
+            );
+        }
+
+        private struct QueuedProjection
+        {
+            public EventEntry Event;
+            public DateTime Time;
+            public bool Exact;
+        }
+
+        // Projects a local kickoff time for every event remaining in this cycle's queue.
+        // The first entry is exact (it's _nextEventTime, already computed with slot/buffer logic).
+        // Every entry after that is an estimate - it assumes sequential firing using the average
+        // of Min/Max buffer time, since the real buffer for each event is only randomized once
+        // it actually becomes next in ScheduleNextEvent().
+        private List<QueuedProjection> ProjectQueueTimes()
+        {
+            var results = new List<QueuedProjection>();
+            if (_nextEvent == null || _nextEventTime <= DateTime.Now || _eventQueue.Count == 0)
+                return results;
+
+            double avgBufferMin = _config.BufferTimeEnabled
+                ? (_config.MinBufferTime + _config.MaxBufferTime) / 2.0
+                : 0;
+
+            DateTime cursor = _nextEventTime;
+            for (int i = 0; i < _eventQueue.Count; i++)
+            {
+                var evt = _eventQueue[i];
+                DateTime time = cursor;
+                results.Add(new QueuedProjection { Event = evt, Time = time, Exact = i == 0 });
+                cursor = time.AddMinutes(evt.RunTime + avgBufferMin);
+            }
+
+            return results;
+        }
+
+        private List<string> ChunkLines(List<string> lines, int maxChars)
+        {
+            var chunks = new List<string>();
+            var sb = new StringBuilder();
+
+            foreach (string line in lines)
+            {
+                if (sb.Length > 0 && sb.Length + line.Length + 1 > maxChars)
+                {
+                    chunks.Add(sb.ToString());
+                    sb.Clear();
+                }
+                if (sb.Length > 0) sb.Append('\n');
+                sb.Append(line);
+            }
+
+            if (sb.Length > 0) chunks.Add(sb.ToString());
+            if (chunks.Count == 0) chunks.Add("None");
+
+            return chunks;
+        }
+
+        private void SendOrEditStickyMessage(string title, string description, List<EmbedField> fields, int color)
+        {
+            var embed = new DiscordEmbed()
+                .SetTitle(title)
+                .SetDescription(description)
+                .SetColor(color)
+                .SetTimestamp(DateTimeOffset.UtcNow)
+                .SetFooter($"rCEventScheduler v{Version}");
+
+            foreach (var f in fields)
+                embed.AddField(f.Name, f.Value, f.Inline);
+
+            var stickyMsg = new DiscordMessage().AddEmbed(embed);
+            if (!string.IsNullOrEmpty(_config.StickyBotName))
+                stickyMsg.SetUsername(_config.StickyBotName);
+
+            string payload = stickyMsg.ToJson();
+
+            if (!string.IsNullOrEmpty(_data.StatusMessageId))
+            {
+                string editUrl = $"{_config.StickyWebhookUrl}/messages/{_data.StatusMessageId}";
+
+                webrequest.Enqueue(editUrl, payload, (code, response) =>
+                {
+                    if (code == 200 || code == 204) return;
+
+                    if (code == 404 || code == 400)
+                    {
+                        PrintWarning($"[rCEventScheduler] Sticky status message missing/invalid (HTTP {code}) - creating a new one.");
+                        _data.StatusMessageId = null;
+                        SaveData();
+                        CreateStickyMessage(payload);
+                    }
+                    else
+                    {
+                        PrintWarning($"[rCEventScheduler] Failed to edit sticky status message (HTTP {code}): {response}");
+                    }
+                }, this, RequestMethod.PATCH, _headers);
+            }
+            else
+            {
+                CreateStickyMessage(payload);
+            }
+        }
+
+        private void CreateStickyMessage(string payload)
+        {
+            webrequest.Enqueue(_config.StickyWebhookUrl + "?wait=true", payload, (code, response) =>
+            {
+                if (code != 200)
+                {
+                    PrintWarning($"[rCEventScheduler] Failed to create sticky status message (HTTP {code}): {response}");
+                    return;
+                }
+
+                try
+                {
+                    var data = JsonConvert.DeserializeObject<Dictionary<string, object>>(response);
+                    if (data != null && data.ContainsKey("id"))
+                    {
+                        _data.StatusMessageId = data["id"].ToString();
+                        SaveData();
+                        Puts($"[rCEventScheduler] Created sticky status Discord message (ID: {_data.StatusMessageId})");
+                    }
+                }
+                catch (Exception ex)
+                {
+                    PrintError($"[rCEventScheduler] Error parsing sticky status message response: {ex.Message}");
+                }
+            }, this, RequestMethod.POST, _headers);
+        }
+
+        #endregion
+
+        #region Sticky Status Console Commands
+
+        [ConsoleCommand("rces.resetstatus")]
+        private void CmdResetStatus(ConsoleSystem.Arg arg)
+        {
+            _data.StatusMessageId = null;
+            SaveData();
+            Puts("[rCEventScheduler] Sticky status message ID cleared. A new message will be created on the next update.");
+        }
+
+        [ConsoleCommand("rces.forcestatus")]
+        private void CmdForceStatus(ConsoleSystem.Arg arg)
+        {
+            if (!_config.EnableStickyStatus)
+            {
+                Puts("[rCEventScheduler] Sticky status message is disabled in config (\"Enable Status Sticky Message\": false).");
+                return;
+            }
+
+            if (string.IsNullOrEmpty(_config.StickyWebhookUrl))
+            {
+                Puts("[rCEventScheduler] No \"Status Sticky Discord Webhook URL\" configured.");
+                return;
+            }
+
+            UpdateStickyStatus();
+            Puts("[rCEventScheduler] Sticky status message update forced.");
+        }
+
+        [ConsoleCommand("rces.status")]
+        private void CmdStickyStatusInfo(ConsoleSystem.Arg arg)
+        {
+            Puts("=== rCEventScheduler Sticky Status ===");
+            Puts($"Enabled: {_config.EnableStickyStatus}");
+            Puts($"Webhook Configured: {!string.IsNullOrEmpty(_config.StickyWebhookUrl)}");
+            Puts($"Stored Message ID: {(_data.StatusMessageId ?? "(none)")}");
+            Puts($"Active Events: {(_activeEvents.Count > 0 ? string.Join(", ", _activeEvents) : "None")}");
+            Puts($"Next Event: {(_nextEvent != null ? _nextEvent.Name : "Not yet scheduled")}");
         }
 
         #endregion
