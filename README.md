@@ -1,4 +1,4 @@
-![Version](https://img.shields.io/badge/Version-1.0.20-brightgreen) ![Game](https://img.shields.io/badge/Game-Rust-orange) ![Framework](https://img.shields.io/badge/uMod%2FOxide-Oxide-blue) ![License](https://img.shields.io/badge/License-GPL%20v3-lightgrey)
+![Version](https://img.shields.io/badge/Version-1.0.21-brightgreen) ![Game](https://img.shields.io/badge/Game-Rust-orange) ![Framework](https://img.shields.io/badge/uMod%2FOxide-Oxide-blue) ![License](https://img.shields.io/badge/License-GPL%20v3-lightgrey)
 
 # Rust Custom Event Scheduler
 
@@ -404,6 +404,8 @@ By default, the event queue and next-event timing survive a plugin reload or ser
 **Note:** this can't distinguish a real server restart from `oxide.reload rCEventScheduler` — both trigger the same restore behavior.
 
 Disable with `"Retain Schedule Between Restarts": false` to always start every load with a fresh randomized queue (the original behavior).
+
+**Force a fresh queue on demand:** run `rces.resetqueue` in the server console at any time to immediately rebuild a brand-new randomized queue, bypassing whatever would otherwise have been restored. Currently active/running events are left alone — only the upcoming queue is rebuilt.
 
 ---
 
