@@ -8,7 +8,7 @@ using Oxide.Core.Libraries;
 
 namespace Oxide.Plugins
 {
-    [Info("Rust Custom Event Scheduler", "Ftuoil Xelrash", "1.0.22")]
+    [Info("Rust Custom Event Scheduler", "Ftuoil Xelrash", "1.0.23")]
     [Description("Schedules and manages custom Rust server events with randomized queues and Discord notifications.")]
     public class rCEventScheduler : RustPlugin
     {
@@ -929,7 +929,7 @@ namespace Oxide.Plugins
             {
                 string timeStr = proj.Time.ToString("h:mm tt") + " " + tz;
                 string displayTime = proj.Exact ? timeStr : $"~{timeStr}";
-                queueLines.Add($"{qn}. {proj.Event.Name} - {displayTime}");
+                queueLines.Add($"{qn}. {proj.Event.Name}: {displayTime}");
                 qn++;
             }
 
