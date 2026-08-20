@@ -8,7 +8,7 @@ using Oxide.Core.Libraries;
 
 namespace Oxide.Plugins
 {
-    [Info("Rust Custom Event Scheduler", "Ftuoil Xelrash", "1.0.21")]
+    [Info("Rust Custom Event Scheduler", "Ftuoil Xelrash", "1.0.22")]
     [Description("Schedules and manages custom Rust server events with randomized queues and Discord notifications.")]
     public class rCEventScheduler : RustPlugin
     {
@@ -241,8 +241,6 @@ namespace Oxide.Plugins
             }
         }
 
-        // Snapshots the current queue/next-event state to the data file so it can survive a
-        // reload or restart. No-op if the feature is disabled in config.
         private void PersistScheduleState()
         {
             if (!_config.RetainScheduleBetweenRestarts) return;
@@ -408,12 +406,6 @@ namespace Oxide.Plugins
             );
         }
 
-        // Attempts to resume the queue/next-event schedule saved by a previous session instead of
-        // building a fresh randomized queue. Returns false (caller should fall back to BuildQueue)
-        // if the feature is disabled, nothing was saved, or nothing in the saved queue is still valid.
-        // Events still marked active at the moment of shutdown are never restored as active - we can't
-        // confirm the underlying game entity survived a real restart, so that tracking is simply left
-        // empty (as it always is on a fresh load) and MaxActiveEvents is immediately available again.
         private bool TryRestoreSchedule(List<EventEntry> valid)
         {
             if (!_config.RetainScheduleBetweenRestarts) return false;
@@ -936,7 +928,8 @@ namespace Oxide.Plugins
             foreach (var proj in ProjectQueueTimes())
             {
                 string timeStr = proj.Time.ToString("h:mm tt") + " " + tz;
-                queueLines.Add($"{qn}. {proj.Event.Name} - {timeStr}{(proj.Exact ? "" : " (est.)")}");
+                string displayTime = proj.Exact ? timeStr : $"~{timeStr}";
+                queueLines.Add($"{qn}. {proj.Event.Name} - {displayTime}");
                 qn++;
             }
 
@@ -973,11 +966,6 @@ namespace Oxide.Plugins
             public bool Exact;
         }
 
-        // Projects a local kickoff time for every event remaining in this cycle's queue.
-        // The first entry is exact (it's _nextEventTime, already computed with slot/buffer logic).
-        // Every entry after that is an estimate - it assumes sequential firing using the average
-        // of Min/Max buffer time, since the real buffer for each event is only randomized once
-        // it actually becomes next in ScheduleNextEvent().
         private List<QueuedProjection> ProjectQueueTimes()
         {
             var results = new List<QueuedProjection>();
