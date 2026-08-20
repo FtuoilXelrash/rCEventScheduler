@@ -379,13 +379,7 @@ The message is edited only when something actually changes (an event starts, end
 2. Set `Status Sticky Discord Webhook URL` in the config to that webhook URL
 3. Leave `Enable Status Sticky Message` as `true` (default) — or set it `false` to disable
 
-**Console commands:**
-
-| Command | Description |
-|---|---|
-| `rces.status` | Print current sticky status state to console (enabled, webhook configured, message ID, active/next event) |
-| `rces.forcestatus` | Force an immediate sticky message update |
-| `rces.resetstatus` | Clear the stored Discord message ID — a new message will be created on the next update |
+> Console commands for the sticky message (`rces.status`, `rces.forcestatus`, `rces.resetstatus`) are listed in [Console Commands](#-console-commands) below.
 
 ---
 
@@ -405,7 +399,20 @@ By default, the event queue and next-event timing survive a plugin reload or ser
 
 Disable with `"Retain Schedule Between Restarts": false` to always start every load with a fresh randomized queue (the original behavior).
 
-**Force a fresh queue on demand:** run `rces.resetqueue` in the server console at any time to immediately rebuild a brand-new randomized queue, bypassing whatever would otherwise have been restored. Currently active/running events are left alone — only the upcoming queue is rebuilt.
+> To force a fresh queue on demand instead of waiting for a restart, use `rces.resetqueue` — see [Console Commands](#-console-commands) below.
+
+---
+
+## 🖥️ Console Commands
+
+All commands are run from the server console (not in-game chat).
+
+| Command | Description |
+|---|---|
+| `rces.resetqueue` | Force an immediate fresh randomized queue, bypassing whatever `Retain Schedule Between Restarts` would otherwise resume. Re-validates Required Plugins the same way a fresh load does. Leaves currently active/running events untouched — only rebuilds the upcoming queue |
+| `rces.status` | Print current sticky status state to console (enabled, webhook configured, message ID, active/next event) |
+| `rces.forcestatus` | Force an immediate sticky message update |
+| `rces.resetstatus` | Clear the stored sticky Discord message ID — a new message will be created on the next update |
 
 ---
 
