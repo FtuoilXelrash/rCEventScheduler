@@ -1,4 +1,4 @@
-![Version](https://img.shields.io/badge/Version-1.0.21-brightgreen) ![Game](https://img.shields.io/badge/Game-Rust-orange) ![Framework](https://img.shields.io/badge/uMod%2FOxide-Oxide-blue) ![License](https://img.shields.io/badge/License-GPL%20v3-lightgrey)
+![Version](https://img.shields.io/badge/Version-1.0.23-brightgreen) ![Game](https://img.shields.io/badge/Game-Rust-orange) ![Framework](https://img.shields.io/badge/uMod%2FOxide-Oxide-blue) ![License](https://img.shields.io/badge/License-GPL%20v3-lightgrey)
 
 # Rust Custom Event Scheduler
 
@@ -366,7 +366,7 @@ A single Discord message that updates itself in place — like a live status boa
 **Shown in the message:**
 - **Active Event(s)** — name, expected end time, and minutes remaining. If nothing is currently active but an event ended recently, this shows `"{Event} is finishing up (ended {time})"` instead of the bare "No events currently active" — useful if your real event durations sometimes run shorter than the configured `Event Run Time`. Only shows the plain "No events currently active" message on a fresh load before anything has run yet.
 - **Next Event** — name, scheduled time, countdown, queue position, and events until reshuffle
-- **Upcoming Queue** — every event remaining in the current cycle's randomized queue, in the order it will fire, each with a projected local kickoff time. The first entry is exact; every entry after that is labeled `(est.)` since real per-event delay is only randomized once that event actually becomes next. Events already fired this cycle drop off the list until the next reshuffle.
+- **Upcoming Queue** — every event remaining in the current cycle's randomized queue, in the order it will fire, each shown as `"{Event}: {Time}"`. The first entry is exact; every entry after that is prefixed with `~` (e.g. `Convoy Event: ~10:29 PM CST`) since real per-event delay is only randomized once that event actually becomes next. Events already fired this cycle drop off the list until the next reshuffle.
 
 All times use your server's local time, same as every other message this plugin sends — no special Discord timestamp formatting.
 
