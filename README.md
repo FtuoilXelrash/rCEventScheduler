@@ -1,4 +1,4 @@
-![Version](https://img.shields.io/badge/Version-1.0.10-brightgreen) ![Game](https://img.shields.io/badge/Game-Rust-orange) ![Framework](https://img.shields.io/badge/uMod%2FOxide-Oxide-blue) ![License](https://img.shields.io/badge/License-GPL%20v3-lightgrey)
+![Version](https://img.shields.io/badge/Version-1.0.11-brightgreen) ![Game](https://img.shields.io/badge/Game-Rust-orange) ![Framework](https://img.shields.io/badge/uMod%2FOxide-Oxide-blue) ![License](https://img.shields.io/badge/License-GPL%20v3-lightgrey)
 
 # Rust Custom Event Scheduler
 
@@ -51,6 +51,7 @@
   "Show Next Event Scheduled on Event End": true,
   "Enable Status Sticky Message": true,
   "Status Sticky Discord Webhook URL": "",
+  "Status Sticky Discord Bot Name": "Event Scheduler",
   "Events": [
     {
       "Event Name": "Air Event",
@@ -271,6 +272,7 @@
 | `Show Next Event Scheduled on Event End` | `true` | After an event ends, re-send the Next Event Scheduled Discord embed as a reminder |
 | `Enable Status Sticky Message` | `true` | Enable the self-updating sticky live-status Discord message |
 | `Status Sticky Discord Webhook URL` | `""` | Discord webhook URL for the sticky live-status message — separate from the admin webhook above |
+| `Status Sticky Discord Bot Name` | `"Event Scheduler"` | Discord display name sent with the sticky message, overriding whatever the raw webhook is named in Discord's own settings |
 
 ### Per-Event Options
 
@@ -338,9 +340,11 @@ A single Discord message that updates itself in place — like a live status boa
 **Shown in the message:**
 - **Active Event(s)** — name, expected end time, and minutes remaining (or "No events currently active")
 - **Next Event** — name, scheduled time, countdown, queue position, and events until reshuffle
-- **Event Roster** — every enabled event with its run time, alphabetical (not just the current cycle's order)
+- **Upcoming Queue** — every event remaining in the current cycle's randomized queue, in the order it will fire, each with a projected local kickoff time. The first entry is exact; every entry after that is labeled `(est.)` since real per-event delay is only randomized once that event actually becomes next. Events already fired this cycle drop off the list until the next reshuffle.
 
 All times use your server's local time, same as every other message this plugin sends — no special Discord timestamp formatting.
+
+The message's Discord display name is set by `Status Sticky Discord Bot Name` (default `"Event Scheduler"`) — this overrides whatever your raw webhook happens to be named in Discord's own settings, so it always shows a consistent, meaningful name.
 
 The message is edited only when something actually changes (an event starts, ends, or the next event gets scheduled/delayed) — there's no background refresh timer. If the message is deleted from Discord, the plugin automatically posts a new one on the next update.
 
