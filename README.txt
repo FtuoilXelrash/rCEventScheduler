@@ -1,6 +1,6 @@
 ================================================================================
   Rust Custom Event Scheduler
-  Version: 1.0.21  |  Author: Ftuoil Xelrash  |  License: GPL v3
+  Version: 1.0.23  |  Author: Ftuoil Xelrash  |  License: GPL v3
   Platform: uMod / Oxide for Rust
 ================================================================================
 
@@ -411,12 +411,13 @@ STICKY LIVE-STATUS MESSAGE
     Next Event         Name, scheduled time, countdown, queue position,
                        and events until reshuffle
     Upcoming Queue     Every event remaining in the current cycle's
-                       randomized queue, in firing order, each with a
-                       projected local kickoff time. First entry is exact;
-                       later entries are marked (est.) since real per-event
-                       delay is only randomized once that event actually
-                       becomes next. Events already fired this cycle drop
-                       off the list until the next reshuffle.
+                       randomized queue, in firing order, each shown as
+                       "<Event>: <Time>". First entry is exact; later
+                       entries are prefixed with ~ (e.g. Convoy Event:
+                       ~10:29 PM CST) since real per-event delay is only
+                       randomized once that event actually becomes next.
+                       Events already fired this cycle drop off the list
+                       until the next reshuffle.
 
   All times use your server's local time, same as every other message this
   plugin sends — no special Discord timestamp formatting.
