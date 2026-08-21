@@ -1,6 +1,6 @@
 ================================================================================
   Rust Custom Event Scheduler
-  Version: 1.0.23  |  Author: Ftuoil Xelrash  |  License: GPL v3
+  Version: 1.0.24  |  Author: Ftuoil Xelrash  |  License: GPL v3
   Platform: uMod / Oxide for Rust
 ================================================================================
 
@@ -409,7 +409,13 @@ STICKY LIVE-STATUS MESSAGE
                        configured Event Run Time. Only shows the plain
                        message on a fresh load before anything has run.
     Next Event         Name, scheduled time, countdown, queue position,
-                       and events until reshuffle
+                       and events until reshuffle. If the cycle just
+                       finished (queue briefly empty while a new one is
+                       built), shows "A new event queue will be shuffled
+                       once the current event(s) finish." instead of a
+                       bare "Not yet scheduled" - only when something is
+                       actually active. A genuinely fresh load still
+                       shows "Not yet scheduled".
     Upcoming Queue     Every event remaining in the current cycle's
                        randomized queue, in firing order, each shown as
                        "<Event>: <Time>". First entry is exact; later
@@ -417,7 +423,9 @@ STICKY LIVE-STATUS MESSAGE
                        ~10:29 PM CST) since real per-event delay is only
                        randomized once that event actually becomes next.
                        Events already fired this cycle drop off the list
-                       until the next reshuffle.
+                       until the next reshuffle - during that same brief
+                       gap, shows "Queue will reshuffle once the current
+                       event(s) finish." when something is active.
 
   All times use your server's local time, same as every other message this
   plugin sends — no special Discord timestamp formatting.
