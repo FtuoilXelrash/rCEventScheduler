@@ -1,6 +1,6 @@
 ================================================================================
   Rust Custom Event Scheduler
-  Version: 1.0.25  |  Author: Ftuoil Xelrash  |  License: GPL v3
+  Version: 1.0.26  |  Author: Ftuoil Xelrash  |  License: GPL v3
   Platform: uMod / Oxide for Rust
 ================================================================================
 
@@ -427,6 +427,11 @@ STICKY LIVE-STATUS MESSAGE
                        reshuffle - during that same brief gap, shows
                        "Queue will reshuffle once the current event(s)
                        finish." when something is active.
+
+  Note: every "minutes remaining" style countdown in this plugin
+  (Scheduled Time, Active Event(s) time left, Upcoming Queue, and the
+  admin Discord embeds) shows "< 1 min" instead of a misleading "~0 min"
+  once there's genuinely less than a minute left.
 
   All times use your server's local time, same as every other message this
   plugin sends — no special Discord timestamp formatting.
