@@ -8,7 +8,7 @@ using Oxide.Core.Libraries;
 
 namespace Oxide.Plugins
 {
-    [Info("Rust Custom Event Scheduler", "Ftuoil Xelrash", "1.0.24")]
+    [Info("Rust Custom Event Scheduler", "Ftuoil Xelrash", "1.0.26")]
     [Description("Schedules and manages custom Rust server events with randomized queues and Discord notifications.")]
     public class rCEventScheduler : RustPlugin
     {
@@ -431,9 +431,33 @@ namespace Oxide.Plugins
             _lastEndedEventTime = _data.LastEndedEventTime ?? DateTime.MinValue;
 
             bool firstEventDropped = dropped.Contains(_data.QueueEventNames[0]);
+            bool haveTiming        = !firstEventDropped && _data.NextEventTime.HasValue;
 
-            string restoredList = string.Join("\n", restoredQueue.Select((e, i) => $"{i + 1}. {e.Name}"));
-            string droppedNote  = dropped.Count > 0
+            if (haveTiming)
+            {
+                _nextEvent     = _eventQueue[0];
+                _nextEventTime = _data.NextEventTime.Value;
+            }
+
+            string tz = GetTzAbbr();
+
+            List<string> restoredLines = (haveTiming && _nextEventTime > DateTime.Now)
+                ? BuildQueueLines(ProjectQueueTimes(), tz)
+                : restoredQueue.Select((e, i) => $"{i + 1}. {e.Name} ({e.RunTime} min)").ToList();
+
+            var restoredChunks = ChunkLines(restoredLines, 1000);
+            var restoredFields = new List<EmbedField>();
+            if (restoredChunks.Count == 1)
+            {
+                restoredFields.Add(new EmbedField("Restored Queue", restoredChunks[0], false));
+            }
+            else
+            {
+                for (int i = 0; i < restoredChunks.Count; i++)
+                    restoredFields.Add(new EmbedField($"Restored Queue ({i + 1}/{restoredChunks.Count})", restoredChunks[i], false));
+            }
+
+            string droppedNote = dropped.Count > 0
                 ? $"\n{dropped.Count} event(s) dropped - no longer valid (disabled or missing plugin): {string.Join(", ", dropped)}"
                 : "";
 
@@ -441,18 +465,14 @@ namespace Oxide.Plugins
                 consoleMsg:     $"[rCEventScheduler] Schedule restored from previous session - {restoredQueue.Count} event(s) in queue." + (dropped.Count > 0 ? $" {dropped.Count} dropped: {string.Join(", ", dropped)}" : ""),
                 title:          $"{ConVar.Server.hostname} Event Scheduler",
                 desc:           $"**Schedule Restored**\nContinuing the event queue from before the restart.{droppedNote}",
-                fields:         new List<EmbedField> { new EmbedField("Restored Queue", restoredList, false) },
+                fields:         restoredFields,
                 color:          EmbedColors.Blue,
                 discordEnabled: _config.NotifyScheduleRestored
             );
 
-            if (!firstEventDropped && _data.NextEventTime.HasValue)
+            if (haveTiming)
             {
-                _nextEvent     = _eventQueue[0];
-                _nextEventTime = _data.NextEventTime.Value;
-
                 double remainingSecs = (_nextEventTime - DateTime.Now).TotalSeconds;
-                string tz            = GetTzAbbr();
 
                 _schedulerTimer?.Destroy();
 
@@ -537,7 +557,8 @@ namespace Oxide.Plugins
 
             int slotSecs    = _activeEvents.Count >= _config.MaxActiveEvents ? SecsUntilSlot() : 0;
             int totalSecs   = slotSecs + bufferSecs;
-            int displayMins = totalSecs / 60;
+            string etaShort = FormatEta(totalSecs / 60.0, "min");
+            string etaLong  = FormatEta(totalSecs / 60.0, "minutes");
 
             int queuePos  = _cycleTotal - _eventQueue.Count + 1;
             int afterThis = _eventQueue.Count - 1;
@@ -548,14 +569,14 @@ namespace Oxide.Plugins
             string timeStr = _nextEventTime.ToString("h:mm tt") + " " + tz;
 
             LogEvent(
-                consoleMsg: $"[rCEventScheduler] Next event: {_nextEvent.Name} - scheduled at {timeStr} (in ~{displayMins} min) [{queuePos}/{_cycleTotal}]",
+                consoleMsg: $"[rCEventScheduler] Next event: {_nextEvent.Name} - scheduled at {timeStr} (in {etaShort}) [{queuePos}/{_cycleTotal}]",
                 title:      $"{ConVar.Server.hostname} Event Scheduler",
                 desc:       "**Next Event Scheduled**\nThe next event has been queued.",
                 fields:     new List<EmbedField>
                 {
                     new EmbedField("Event",           _nextEvent.Name,                                                                             false),
                     new EmbedField("Scheduled Time",  timeStr,                                                                                     false),
-                    new EmbedField("In",              $"~{displayMins} minutes",                                                                   false),
+                    new EmbedField("In",              etaLong,                                                                                     false),
                     new EmbedField("Queue Position",  $"{queuePos} of {_cycleTotal}",                                                              false),
                     new EmbedField("Until Reshuffle", afterThis == 0 ? "This is the last event - reshuffle next" : $"{afterThis} event(s) after this one", false)
                 },
@@ -577,7 +598,8 @@ namespace Oxide.Plugins
                 int bufferSecs = _rng.Next(_config.MinBufferTime, _config.MaxBufferTime + 1) * 60;
                 int slotSecs   = SecsUntilSlot();
                 int waitSecs   = slotSecs + bufferSecs;
-                int waitMins   = waitSecs / 60;
+                string etaShort = FormatEta(waitSecs / 60.0, "min");
+                string etaLong  = FormatEta(waitSecs / 60.0, "minutes");
 
                 _nextEventTime = DateTime.Now.AddSeconds(waitSecs);
 
@@ -585,14 +607,14 @@ namespace Oxide.Plugins
                 string timeStr = _nextEventTime.ToString("h:mm tt") + " " + tz;
 
                 LogEvent(
-                    consoleMsg: $"[rCEventScheduler] Max active events ({_config.MaxActiveEvents}) reached. {_nextEvent.Name} delayed ~{waitMins} min - retrying at {timeStr}",
+                    consoleMsg: $"[rCEventScheduler] Max active events ({_config.MaxActiveEvents}) reached. {_nextEvent.Name} delayed {etaShort} - retrying at {timeStr}",
                     title:      $"{ConVar.Server.hostname} Event Scheduler",
                     desc:       $"**Event Delayed**\nMax active events reached. **{_nextEvent.Name}** has been delayed.",
                     fields:     new List<EmbedField>
                     {
                         new EmbedField("Event",         _nextEvent.Name,                                          false),
                         new EmbedField("Delayed Until", timeStr,                                                  false),
-                        new EmbedField("In",            $"~{waitMins} minutes",                                   false),
+                        new EmbedField("In",            etaLong,                                                  false),
                         new EmbedField("Reason",        $"Max active events ({_config.MaxActiveEvents}) reached", false)
                     },
                     color: EmbedColors.Orange,
@@ -683,9 +705,9 @@ namespace Oxide.Plugins
                     int queuePos  = _cycleTotal - _eventQueue.Count + 1;
                     int afterThis = _eventQueue.Count - 1;
 
-                    string tz         = GetTzAbbr();
-                    string timeStr    = _nextEventTime.ToString("h:mm tt") + " " + tz;
-                    int    displayMins = (int)(_nextEventTime - DateTime.Now).TotalMinutes;
+                    string tz      = GetTzAbbr();
+                    string timeStr = _nextEventTime.ToString("h:mm tt") + " " + tz;
+                    string etaLong = FormatEta((_nextEventTime - DateTime.Now).TotalMinutes, "minutes");
 
                     SendEmbed(
                         $"{ConVar.Server.hostname} Event Scheduler",
@@ -694,7 +716,7 @@ namespace Oxide.Plugins
                         {
                             new EmbedField("Event",           _nextEvent.Name,                                                                                     false),
                             new EmbedField("Scheduled Time",  timeStr,                                                                                             false),
-                            new EmbedField("In",              $"~{displayMins} minutes",                                                                           false),
+                            new EmbedField("In",              etaLong,                                                                                             false),
                             new EmbedField("Queue Position",  $"{queuePos} of {_cycleTotal}",                                                                      false),
                             new EmbedField("Until Reshuffle", afterThis == 0 ? "This is the last event - reshuffle next" : $"{afterThis} event(s) after this one", false)
                         },
@@ -887,9 +909,9 @@ namespace Oxide.Plugins
                     string line = $"• {name}";
                     if (_activeEventEndTimes.TryGetValue(name, out DateTime endTime))
                     {
-                        string endStr   = endTime.ToString("h:mm tt") + " " + tz;
-                        int    minsLeft = Math.Max(0, (int)(endTime - DateTime.Now).TotalMinutes);
-                        line += $" - ends {endStr} (~{minsLeft} min left)";
+                        string endStr = endTime.ToString("h:mm tt") + " " + tz;
+                        string etaLeft = FormatEta((endTime - DateTime.Now).TotalMinutes, "min left");
+                        line += $" - ends {endStr} ({etaLeft})";
                     }
                     activeLines.Add(line);
                 }
@@ -910,11 +932,11 @@ namespace Oxide.Plugins
                 int queuePos  = _cycleTotal - _eventQueue.Count + 1;
                 int afterThis = _eventQueue.Count - 1;
 
-                string timeStr     = _nextEventTime.ToString("h:mm tt") + " " + tz;
-                int    displayMins = Math.Max(0, (int)(_nextEventTime - DateTime.Now).TotalMinutes);
+                string timeStr = _nextEventTime.ToString("h:mm tt") + " " + tz;
+                string eta     = FormatEta((_nextEventTime - DateTime.Now).TotalMinutes, "min");
 
                 fields.Add(new EmbedField("Next Event",       _nextEvent.Name,                                                                             false));
-                fields.Add(new EmbedField("Scheduled Time",   $"{timeStr} (~{displayMins} min)",                                                           false));
+                fields.Add(new EmbedField("Scheduled Time",   $"{timeStr} ({eta})",                                                                        false));
                 fields.Add(new EmbedField("Queue Position",   $"{queuePos} of {_cycleTotal}",                                                              false));
                 fields.Add(new EmbedField("Until Reshuffle",  afterThis == 0 ? "This is the last event - reshuffle next" : $"{afterThis} event(s) after this one", false));
             }
@@ -926,15 +948,7 @@ namespace Oxide.Plugins
                 fields.Add(new EmbedField("Next Event", nextMsg, false));
             }
 
-            var queueLines = new List<string>();
-            int qn = 1;
-            foreach (var proj in ProjectQueueTimes())
-            {
-                string timeStr = proj.Time.ToString("h:mm tt") + " " + tz;
-                string displayTime = proj.Exact ? timeStr : $"~{timeStr}";
-                queueLines.Add($"{qn}. {proj.Event.Name}: {displayTime}");
-                qn++;
-            }
+            var queueLines = BuildQueueLines(ProjectQueueTimes(), tz);
 
             if (queueLines.Count == 0)
             {
@@ -992,6 +1006,20 @@ namespace Oxide.Plugins
             }
 
             return results;
+        }
+
+        private List<string> BuildQueueLines(List<QueuedProjection> projections, string tz)
+        {
+            var lines = new List<string>();
+            int qn = 1;
+            foreach (var proj in projections)
+            {
+                string timeStr = proj.Time.ToString("h:mm tt") + " " + tz;
+                string displayTime = proj.Exact ? timeStr : $"~{timeStr}";
+                lines.Add($"{qn}. {proj.Event.Name} ({proj.Event.RunTime} min): {displayTime}");
+                qn++;
+            }
+            return lines;
         }
 
         private List<string> ChunkLines(List<string> lines, int maxChars)
@@ -1178,6 +1206,11 @@ namespace Oxide.Plugins
             DateTime earliest = _activeEventEndTimes.Values.Min();
             int secs = (int)(earliest - DateTime.Now).TotalSeconds;
             return Math.Max(secs, 0);
+        }
+
+        private string FormatEta(double totalMinutes, string unit)
+        {
+            return totalMinutes >= 1 ? $"~{(int)totalMinutes} {unit}" : "< 1 min";
         }
 
         private void RunCmd(string fullCmd)

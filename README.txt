@@ -1,6 +1,6 @@
 ================================================================================
   Rust Custom Event Scheduler
-  Version: 1.0.24  |  Author: Ftuoil Xelrash  |  License: GPL v3
+  Version: 1.0.25  |  Author: Ftuoil Xelrash  |  License: GPL v3
   Platform: uMod / Oxide for Rust
 ================================================================================
 
@@ -418,14 +418,15 @@ STICKY LIVE-STATUS MESSAGE
                        shows "Not yet scheduled".
     Upcoming Queue     Every event remaining in the current cycle's
                        randomized queue, in firing order, each shown as
-                       "<Event>: <Time>". First entry is exact; later
-                       entries are prefixed with ~ (e.g. Convoy Event:
-                       ~10:29 PM CST) since real per-event delay is only
-                       randomized once that event actually becomes next.
-                       Events already fired this cycle drop off the list
-                       until the next reshuffle - during that same brief
-                       gap, shows "Queue will reshuffle once the current
-                       event(s) finish." when something is active.
+                       "<n>. <Event> (<RunTime> min): <Time>" (e.g.
+                       "1. Tugboat Pirates (30 min): 7:45 PM CDT"). First
+                       entry is exact; later entries are prefixed with ~
+                       since real per-event delay is only randomized once
+                       that event actually becomes next. Events already
+                       fired this cycle drop off the list until the next
+                       reshuffle - during that same brief gap, shows
+                       "Queue will reshuffle once the current event(s)
+                       finish." when something is active.
 
   All times use your server's local time, same as every other message this
   plugin sends — no special Discord timestamp formatting.
@@ -465,6 +466,16 @@ RETAIN SCHEDULE BETWEEN RESTARTS
   longer loaded (or the event was disabled/removed from config since the
   restart), it's dropped from the restored queue and logged as a Schedule
   Restored message listing what was dropped.
+
+  The Schedule Restored message shows scheduled times, not just names.
+  Each restored event is listed as "<n>. <Event> (<RunTime> min): <Time>"
+  - the first with an exact time, the rest prefixed with ~ since real
+  per-event delay is only randomized once that event actually becomes
+  next. This makes it immediately clear whether a short restored list
+  (e.g. "3 events") means you're just near the end of an existing cycle
+  versus something being wrong. If the very first restored event's plugin
+  is no longer available, or no reliable saved time exists, it falls back
+  to a names + run-time list without times.
 
   Restart downtime is handled automatically. The saved "next event" time
   is an absolute clock time, not "X minutes from now" - so if the server
