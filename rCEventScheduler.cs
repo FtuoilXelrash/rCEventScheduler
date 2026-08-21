@@ -8,7 +8,7 @@ using Oxide.Core.Libraries;
 
 namespace Oxide.Plugins
 {
-    [Info("Rust Custom Event Scheduler", "Ftuoil Xelrash", "1.0.23")]
+    [Info("Rust Custom Event Scheduler", "Ftuoil Xelrash", "1.0.24")]
     [Description("Schedules and manages custom Rust server events with randomized queues and Discord notifications.")]
     public class rCEventScheduler : RustPlugin
     {
@@ -920,7 +920,10 @@ namespace Oxide.Plugins
             }
             else
             {
-                fields.Add(new EmbedField("Next Event", "Not yet scheduled.", false));
+                string nextMsg = _activeEvents.Count > 0
+                    ? "A new event queue will be shuffled once the current event(s) finish."
+                    : "Not yet scheduled.";
+                fields.Add(new EmbedField("Next Event", nextMsg, false));
             }
 
             var queueLines = new List<string>();
@@ -935,7 +938,10 @@ namespace Oxide.Plugins
 
             if (queueLines.Count == 0)
             {
-                fields.Add(new EmbedField("Upcoming Queue", "Not yet scheduled.", false));
+                string queueMsg = _activeEvents.Count > 0
+                    ? "Queue will reshuffle once the current event(s) finish."
+                    : "Not yet scheduled.";
+                fields.Add(new EmbedField("Upcoming Queue", queueMsg, false));
             }
             else
             {
